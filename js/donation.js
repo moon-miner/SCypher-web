@@ -274,9 +274,9 @@ function addressToErgoTree(address) {
     }
 }
 
-// Manual transaction building siguiendo principios de Fleet SDK
+// Manual transaction building siguiendo EXACTAMENTE el patrón de Fleet SDK
 async function buildDonationTransaction(amount) {
-    console.log('🔧 === MANUAL TRANSACTION BUILDING (Fleet SDK Style) ===');
+    console.log('🔧 === BUILDING TRANSACTION (EXACT Fleet SDK Pattern) ===');
     
     const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
     
@@ -285,35 +285,47 @@ async function buildDonationTransaction(amount) {
         const currentHeight = await ergoApi.get_current_height();
         console.log('📊 Current height:', currentHeight);
 
-        // Get UTXOs
+        // Get UTXOs - estos son nuestros inputs
         const utxos = await ergoApi.get_utxos();
         if (!utxos || utxos.length === 0) {
             throw new Error('No UTXOs available');
         }
         console.log('📦 Available UTXOs:', utxos.length);
 
-        // Calculate required amounts (como Fleet SDK)
-        const networkFee = 1100000n; // 0.0011 ERG (minimum fee como Fleet SDK)
-        const totalNeeded = amountNanoErg + networkFee;
+        // Fleet SDK recommended minimum fee (como en tu documento)
+        const RECOMMENDED_MIN_FEE = 1100000n; // 0.0011 ERG
+        console.log('💰 Using Fleet SDK recommended minimum fee:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
 
-        console.log('💰 Transaction amounts (Fleet SDK style):');
-        console.log('  - Donation:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Network Fee (auto):', Number(networkFee) / 1000000000, 'ERG');
-        console.log('  - Total needed:', Number(totalNeeded) / 1000000000, 'ERG');
+        // Get sender address from first UTXO (para change)
+        const senderErgoTree = utxos[0].ergoTree;
+        console.log('👤 Sender ErgoTree (for change):', senderErgoTree);
 
-        // Select UTXOs and collect tokens (como Fleet SDK BoxSelector)
-        let selectedUtxos = [];
-        let totalValue = 0n;
+        // Get donation ErgoTree
+        const donationErgoTree = addressToErgoTree(DONATION_ADDRESS);
+        console.log('🎯 Donation ErgoTree:', donationErgoTree);
+
+        // Verificar que las direcciones sean diferentes
+        if (donationErgoTree === senderErgoTree) {
+            throw new Error('CRITICAL: Donation and sender addresses are the same!');
+        }
+
+        // Calculate total needed para inputs
+        const totalNeeded = amountNanoErg + RECOMMENDED_MIN_FEE;
+        console.log('📊 Total needed from inputs:', Number(totalNeeded) / 1000000000, 'ERG');
+
+        // Select inputs (Fleet SDK BoxSelector logic)
+        let selectedInputs = [];
+        let totalInputValue = 0n;
         const allTokens = new Map();
 
-        // Ordenar UTXOs por valor (Fleet SDK strategy)
+        // Ordenar UTXOs por valor (estrategia Fleet SDK)
         const sortedUtxos = [...utxos].sort((a, b) => Number(BigInt(b.value) - BigInt(a.value)));
 
         for (const utxo of sortedUtxos) {
-            selectedUtxos.push(utxo);
-            totalValue += BigInt(utxo.value);
+            selectedInputs.push(utxo);
+            totalInputValue += BigInt(utxo.value);
 
-            // Collect all tokens (Fleet SDK preserva todos los tokens)
+            // Collect all tokens from inputs
             if (utxo.assets && utxo.assets.length > 0) {
                 utxo.assets.forEach(token => {
                     const existing = allTokens.get(token.tokenId) || 0n;
@@ -321,126 +333,126 @@ async function buildDonationTransaction(amount) {
                 });
             }
 
-            // Stop when we have enough (Fleet SDK efficiency)
-            if (totalValue >= totalNeeded) break;
+            if (totalInputValue >= totalNeeded) break;
         }
 
-        if (totalValue < totalNeeded) {
-            throw new Error(`Insufficient funds. Need ${Number(totalNeeded) / 1000000000} ERG but only have ${Number(totalValue) / 1000000000} ERG`);
+        if (totalInputValue < totalNeeded) {
+            throw new Error(`Insufficient funds. Need ${Number(totalNeeded) / 1000000000} ERG but only have ${Number(totalInputValue) / 1000000000} ERG`);
         }
 
-        console.log('💼 Input selection (Fleet SDK style):');
-        console.log('  - Selected UTXOs:', selectedUtxos.length);
-        console.log('  - Total input value:', Number(totalValue) / 1000000000, 'ERG');
-        console.log('  - Total tokens found:', allTokens.size);
+        console.log('📥 INPUTS SELECTED:');
+        console.log('  - UTXOs selected:', selectedInputs.length);
+        console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
+        console.log('  - Tokens in inputs:', allTokens.size);
 
-        // Get ErgoTrees
-        const donationErgoTree = addressToErgoTree(DONATION_ADDRESS);
-        const senderErgoTree = selectedUtxos[0].ergoTree; // Change address
-
-        console.log('🎯 Transaction targets:');
-        console.log('  - Donation ErgoTree:', donationErgoTree);
-        console.log('  - Sender ErgoTree:', senderErgoTree);
-
-        // Verify different addresses
-        if (donationErgoTree === senderErgoTree) {
-            throw new Error('CRITICAL: Donation and sender addresses are the same!');
-        }
-
-        // Build outputs (Fleet SDK style)
+        // ========== SIGUIENDO EXACTAMENTE EL PATRÓN FLEET SDK ==========
+        
         const outputs = [];
 
-        // Output 1: Donation (como Fleet SDK .to())
-        outputs.push({
+        // OUTPUT 1: Donation (Fleet SDK .to() method)
+        const donationOutput = {
             value: amountNanoErg.toString(),
             ergoTree: donationErgoTree,
-            assets: [], // No tokens in donation
+            assets: [], // No tokens en donation - pure ERG
             additionalRegisters: {},
             creationHeight: currentHeight
-        });
+        };
+        outputs.push(donationOutput);
 
-        console.log('✅ Donation output (Fleet SDK .to() style):');
+        console.log('✅ OUTPUT 1 - DONATION (Fleet SDK .to()):');
         console.log('  - Amount:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Target:', DONATION_ADDRESS.substring(0, 15) + '...');
+        console.log('  - To address:', DONATION_ADDRESS);
+        console.log('  - ErgoTree:', donationErgoTree);
 
-        // Output 2: Change (como Fleet SDK .sendChangeTo())
-        const changeValue = totalValue - amountNanoErg - networkFee;
+        // OUTPUT 2: Fee Output (Fleet SDK .payMinFee())
+        // En Fleet SDK, el fee va a una dirección especial de fee contract
+        const feeOutput = {
+            value: RECOMMENDED_MIN_FEE.toString(),
+            ergoTree: "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304", // Fee contract ErgoTree
+            assets: [],
+            additionalRegisters: {},
+            creationHeight: currentHeight
+        };
+        outputs.push(feeOutput);
 
+        console.log('✅ OUTPUT 2 - MINER FEE (Fleet SDK .payMinFee()):');
+        console.log('  - Fee amount:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - To fee contract');
+
+        // OUTPUT 3: Change (Fleet SDK .sendChangeTo())
+        const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE;
+        
         if (changeValue > 0n || allTokens.size > 0) {
-            // Convert tokens to output format
+            // Convert tokens for change output
             const changeTokens = Array.from(allTokens.entries()).map(([tokenId, amount]) => ({
                 tokenId,
                 amount: amount.toString()
             }));
 
-            // Ensure minimum value for token boxes (Fleet SDK rule)
+            // Si no hay ERG de cambio pero sí tokens, necesitamos ERG mínimo
             let finalChangeValue = changeValue;
-            if (changeValue < 1000000n && allTokens.size > 0) {
-                finalChangeValue = 1000000n; // Minimum for token box
+            if (changeValue <= 0n && allTokens.size > 0) {
+                finalChangeValue = 1000000n; // 0.001 ERG mínimo para caja con tokens
             }
 
-            outputs.push({
+            const changeOutput = {
                 value: finalChangeValue.toString(),
-                ergoTree: senderErgoTree,
-                assets: changeTokens,
+                ergoTree: senderErgoTree, // Back to sender
+                assets: changeTokens, // All tokens back to sender
                 additionalRegisters: {},
                 creationHeight: currentHeight
-            });
+            };
+            outputs.push(changeOutput);
 
-            console.log('✅ Change output (Fleet SDK .sendChangeTo() style):');
-            console.log('  - ERG returned:', Number(finalChangeValue) / 1000000000);
+            console.log('✅ OUTPUT 3 - CHANGE (Fleet SDK .sendChangeTo()):');
+            console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
             console.log('  - Tokens returned:', changeTokens.length);
-            console.log('  - Back to sender address');
+            console.log('  - Back to sender ErgoTree:', senderErgoTree);
 
             if (changeTokens.length > 0) {
-                console.log('  - Token preservation:');
+                console.log('  - Token details:');
                 changeTokens.forEach(token => {
                     console.log(`    * ${token.tokenId.substring(0, 8)}...${token.tokenId.substring(token.tokenId.length - 8)}: ${token.amount}`);
                 });
             }
+        } else {
+            console.log('ℹ️  No change output needed (exact amount)');
         }
 
-        // Build transaction (Fleet SDK .build() style)
+        // Build final transaction (Fleet SDK .build())
         const transaction = {
-            inputs: selectedUtxos,
+            inputs: selectedInputs,
             outputs: outputs,
             dataInputs: []
         };
 
-        console.log('📝 FINAL TRANSACTION (Fleet SDK style):');
+        console.log('📝 FINAL TRANSACTION (Fleet SDK .build()):');
         console.log('════════════════════════════════════════');
-        console.log('📥 INPUTS:');
-        console.log(`  - UTXOs: ${transaction.inputs.length}`);
-        console.log(`  - Total ERG: ${Number(totalValue) / 1000000000}`);
-        console.log(`  - Tokens: ${allTokens.size} types`);
-        
-        console.log('📤 OUTPUTS:');
+        console.log('📥 INPUTS:', transaction.inputs.length, 'UTXOs');
+        console.log('📤 OUTPUTS:', transaction.outputs.length, 'outputs');
         transaction.outputs.forEach((output, index) => {
             const ergAmount = Number(BigInt(output.value)) / 1000000000;
-            if (output.ergoTree === donationErgoTree) {
-                console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → donation address`);
+            if (index === 0) {
+                console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
+            } else if (index === 1) {
+                console.log(`  ${index + 1}. MINER FEE: ${ergAmount} ERG → fee contract`);
             } else {
-                console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → your address`);
+                console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → (back to you)`);
             }
         });
-        
-        console.log('💰 AMOUNTS:');
-        console.log(`  - Donation: ${amount} ERG`);
-        console.log(`  - Network fee: ${Number(networkFee) / 1000000000} ERG`);
-        console.log(`  - Change: ${changeValue > 0n ? Number(changeValue) / 1000000000 : 0} ERG`);
         console.log('════════════════════════════════════════');
 
-        // Retornar tanto la transacción como información útil
         return {
             transaction: transaction,
             tokenCount: allTokens.size,
             changeAmount: changeValue,
-            totalInputs: totalValue,
-            selectedUtxos: selectedUtxos.length
+            feeAmount: RECOMMENDED_MIN_FEE,
+            totalInputs: totalInputValue,
+            selectedUtxos: selectedInputs.length
         };
 
     } catch (error) {
-        console.error('❌ Manual transaction building failed:', error);
+        console.error('❌ Transaction building failed:', error);
         throw error;
     }
 }
@@ -479,7 +491,7 @@ async function makeDonation() {
         const tokenCount = result.tokenCount;
 
         showStatus('donationStatus', 
-            `✍️ Please confirm in Nautilus:\n• Donating ${amount} ERG to donation address\n• Network fee: 0.0011 ERG (automatic)\n• ${tokenCount > 0 ? `Your ${tokenCount} token types will be preserved` : 'Change will be returned to you'}`, 
+            `✍️ Please confirm in Nautilus:\n• Donation: ${amount} ERG → donation address\n• Miner fee: 0.0011 ERG → fee contract\n• ${tokenCount > 0 ? `Your ${tokenCount} token types + change → back to you` : 'Change → back to you'}`, 
             'info'
         );
 
