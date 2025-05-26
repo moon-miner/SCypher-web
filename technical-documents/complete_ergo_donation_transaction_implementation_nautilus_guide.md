@@ -921,6 +921,7 @@ async function testCompleteFlow() {
 | Address Types | https://docs.ergoplatform.com/dev/wallet/address/ | Tipos de direcciones |
 | Nautilus Wallet | https://docs.nautiluswallet.com/ | Documentación de Nautilus |
 | Fleet SDK | https://fleet-sdk.github.io/docs/ | SDK oficial de Ergo |
+| Fleet SDK github | https://github.com/fleet-sdk | SDK oficial de Ergo |
 | ErgoScript | https://docs.ergoplatform.com/dev/scs/ergoscript/ | Lenguaje de contratos |
 
 ### 🛠️ Herramientas de Desarrollo
