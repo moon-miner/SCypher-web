@@ -292,9 +292,9 @@ async function buildDonationTransaction(amount) {
         }
         console.log('📦 Available UTXOs:', utxos.length);
 
-        // Fleet SDK recommended minimum fee (como en tu documento)
-        const RECOMMENDED_MIN_FEE = 1100000n; // 0.0011 ERG
-        console.log('💰 Using Fleet SDK recommended minimum fee:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        // Fleet SDK recommended minimum fee - CORRECCIÓN: 0.001 ERG estándar
+        const RECOMMENDED_MIN_FEE = 1000000n; // 0.001 ERG (no 0.0011)
+        console.log('💰 Using Ergo standard minimum fee:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
 
         // Get sender address from first UTXO (para change)
         const senderErgoTree = utxos[0].ergoTree;
@@ -312,7 +312,7 @@ async function buildDonationTransaction(amount) {
         // Calculate total needed para inputs (SIN incluir fee aquí)
         const totalNeeded = amountNanoErg; // Solo la donación
         console.log('📊 Amount needed for donation:', Number(totalNeeded) / 1000000000, 'ERG');
-        console.log('📊 Fee will be handled implicitly by Ergo network:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('📊 Standard Ergo fee will be deducted:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
 
         // Select inputs (Fleet SDK BoxSelector logic)
         let selectedInputs = [];
