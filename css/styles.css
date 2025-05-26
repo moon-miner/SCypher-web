@@ -569,6 +569,8 @@ a:hover {
     border-color: var(--accent-color);
     background: var(--accent-color);
     color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
 }
 
 .custom-amount {
@@ -577,8 +579,114 @@ a:hover {
     border: 2px solid var(--border-color);
     border-radius: 0.5rem;
     font-size: 1rem;
+    transition: var(--transition);
+}
 
-    /* Additional styles for donation functionality */
+.custom-amount:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.donation-address {
+    background: var(--bg-alt);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.donation-address label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.donation-address code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    word-break: break-all;
+    background: var(--bg-primary);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--border-color);
+    display: block;
+}
+
+/* Contact Section */
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.contact-item {
+    text-align: center;
+    padding: 2rem;
+    background: var(--bg-primary);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+}
+
+.contact-item h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.contact-item p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.contact-link {
+    display: inline-block;
+    margin: 0.25rem 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-alt);
+    border-radius: 0.25rem;
+    color: var(--accent-color);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.contact-link:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Footer */
+.footer {
+    background: var(--primary-color);
+    color: white;
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.footer-text {
+    color: #9ca3af;
+    margin-bottom: 1rem;
+}
+
+.footer-copyright {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
 
 /* Loading spinner */
 .loading {
@@ -635,19 +743,6 @@ a:hover {
     color: #ef4444;
 }
 
-/* Amount button improvements */
-.amount-btn.active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
-}
-
-/* Custom amount input focus */
-.custom-amount:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
 /* Button disabled state improvements */
 .btn:disabled {
     opacity: 0.6;
@@ -656,29 +751,64 @@ a:hover {
     box-shadow: none !important;
 }
 
-/* Donation address styling */
-.donation-address {
-    background: var(--bg-alt);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-menu {
+        position: fixed;
+        top: 80px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 80px);
+        background: var(--bg-primary);
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding-top: 2rem;
+        transition: left 0.3s ease;
+        box-shadow: var(--shadow-lg);
+    }
 
-.donation-address label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
+    .nav-menu.active {
+        left: 0;
+    }
 
-.donation-address code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-    word-break: break-all;
-    background: var(--bg-primary);
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    border: 1px solid var(--border-color);
-    display: block;
+    .nav-toggle {
+        display: flex;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-features {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .download-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .github-links {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .amount-grid {
+        grid-template-columns: 1fr;
+    }
 }
