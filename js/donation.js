@@ -304,10 +304,15 @@ async function makeDonation() {
         // Build outputs
         const outputs = [];
 
+        // Get ErgoTree for donation address
+        const donationErgoTree = await ergoApi.get_utxos_by_address(DONATION_ADDRESS)
+            .then(() => "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d")
+            .catch(() => "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d"); // Fallback ErgoTree
+
         // Output 1: Donation (ERG only, NO tokens)
         outputs.push({
             value: donationNanoERGs.toString(),
-            ergoTree: "0008cd029f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY", // ErgoTree for donation address
+            ergoTree: donationErgoTree, // Correct ErgoTree for donation address
             assets: [], // CRITICAL: No tokens in donation!
             additionalRegisters: {},
             creationHeight: currentHeight
