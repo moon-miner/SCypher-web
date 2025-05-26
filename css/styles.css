@@ -813,232 +813,263 @@ a:hover {
     }
 }
 
-/* Download note styling */
-.download-note {
-    margin-top: 2rem;
+/* Enhanced progress container */
+.download-progress-container {
     padding: 1.5rem;
-    background: var(--bg-primary);
-    border: 2px solid var(--accent-color);
-    border-radius: 0.75rem;
-    box-shadow: var(--shadow-md);
-}
-
-.download-note h5 {
-    color: var(--accent-color);
-    margin-bottom: 1rem;
-    font-size: 1.125rem;
-}
-
-.download-note pre {
-    background: var(--bg-alt);
-    padding: 0.75rem;
-    border-radius: 0.375rem;
-    margin: 1rem 0;
-    overflow-x: auto;
-    border: 1px solid var(--border-color);
-}
-
-.download-note code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-    color: var(--text-primary);
-}
-
-/* Blockchain transparency section */
-.blockchain-transparency {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     border-radius: 1rem;
-    margin: 3rem 0;
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-}
-
-.blockchain-transparency h3 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-}
-
-.transparency-list {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0;
-    display: grid;
-    gap: 0.75rem;
-    text-align: left;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.transparency-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.transparency-list li:hover {
-    background: rgba(99, 102, 241, 0.2);
-    transform: translateX(5px);
-}
-
-/* Enhanced download status messages */
-.download-status.loading {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e40af;
-    border: 2px solid #93c5fd;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    font-weight: 600;
-    animation: pulse-loading 2s ease-in-out infinite;
-}
-
-@keyframes pulse-loading {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-    }
-}
-
-.download-status.success {
-    background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
-    color: #065f46;
-    border: 2px solid #6ee7b7;
-    animation: success-glow 1s ease-out;
-}
-
-@keyframes success-glow {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-    70% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    }
-}
-
-.download-status.error {
-    background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
-    color: #991b1b;
-    border: 2px solid #f87171;
-    animation: error-shake 0.5s ease-in-out;
-}
-
-@keyframes error-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-/* Enhanced button states during download */
-.btn.downloading {
-    background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
-    animation: button-progress 2s ease-in-out infinite;
-    pointer-events: none;
-}
-
-@keyframes button-progress {
-    0%, 100% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-}
-
-/* Progress indicators */
-.download-progress {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    border: 2px solid #cbd5e1;
     margin: 1rem 0;
 }
 
-.progress-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border-color);
-    transition: all 0.3s ease;
+/* Progress info section */
+.progress-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.progress-dot.active {
-    background: var(--accent-color);
-    transform: scale(1.5);
-    box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+.progress-icon {
+    font-size: 1.5rem;
+    animation: progress-pulse 2s ease-in-out infinite;
 }
 
-.progress-dot.completed {
-    background: var(--success-color);
-    transform: scale(1.2);
+@keyframes progress-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
 
-/* Blockchain visualization effects */
-.blockchain-visual {
+.progress-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    line-height: 1.4;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* Progress bar container */
+.progress-bar-container {
+    position: relative;
+    background: #e2e8f0;
+    border-radius: 1rem;
+    height: 1rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Animated progress bar */
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 50%, #3b82f6 100%);
+    background-size: 200% 100%;
+    border-radius: 1rem;
+    transition: width 0.3s ease;
+    animation: progress-shimmer 2s ease-in-out infinite;
     position: relative;
     overflow: hidden;
 }
 
-.blockchain-visual::before {
+@keyframes progress-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Progress bar glow effect */
+.progress-bar::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: linear-gradient(90deg,
         transparent 0%,
-        rgba(99, 102, 241, 0.1) 50%,
+        rgba(255, 255, 255, 0.4) 50%,
         transparent 100%);
-    animation: blockchain-sweep 3s ease-in-out infinite;
+    animation: progress-glow 1.5s ease-in-out infinite;
 }
 
-@keyframes blockchain-sweep {
-    0% { left: -100%; }
-    50% { left: 100%; }
-    100% { left: 100%; }
+@keyframes progress-glow {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
 }
 
-/* Mobile responsiveness for new elements */
+/* Progress percentage */
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Step indicators */
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.step-dot.active {
+    background: #3b82f6;
+    transform: scale(1.3);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+    animation: step-pulse 1s ease-in-out infinite;
+}
+
+.step-dot.completed {
+    background: #10b981;
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.step-dot.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 8px;
+    font-weight: bold;
+}
+
+@keyframes step-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+}
+
+/* Success state */
+.download-success {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-radius: 1rem;
+    border: 2px solid #6ee7b7;
+}
+
+.success-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: success-bounce 0.6s ease-out;
+}
+
+@keyframes success-bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.success-message {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #065f46;
+    margin-bottom: 0.5rem;
+}
+
+.success-details {
+    font-size: 0.875rem;
+    color: #047857;
+    font-weight: 500;
+}
+
+/* Error state */
+.download-error {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 1rem;
+    border: 2px solid #f87171;
+}
+
+.error-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    animation: error-shake 0.5s ease-in-out;
+}
+
+.error-message {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #991b1b;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* Mobile responsiveness for progress elements */
 @media (max-width: 768px) {
-    .download-note {
-        margin: 1rem 0;
+    .download-progress-container {
         padding: 1rem;
     }
 
-    .blockchain-transparency {
-        margin: 2rem 0;
-        padding: 1.5rem;
+    .progress-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        text-align: left;
     }
 
-    .transparency-list {
+    .progress-text {
+        font-size: 0.9rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .progress-bar-container {
+        height: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .progress-percentage {
+        font-size: 0.75rem;
+        right: 0.5rem;
+    }
+
+    .progress-steps {
         gap: 0.5rem;
     }
 
-    .transparency-list li {
-        padding: 0.5rem;
-        font-size: 0.9rem;
+    .step-dot {
+        width: 10px;
+        height: 10px;
     }
 
-    .download-status {
-        font-size: 0.9rem;
-        padding: 0.75rem;
+    .success-icon, .error-icon {
+        font-size: 2rem;
+    }
+
+    .download-success, .download-error {
+        padding: 1.5rem;
+    }
+}
+
+/* Loading state improvements */
+.download-status.loading .download-progress-container {
+    animation: container-glow 2s ease-in-out infinite;
+}
+
+@keyframes container-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
     }
 }
