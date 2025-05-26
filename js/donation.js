@@ -1,4 +1,4 @@
-// donation.js - VERSIÓN CORRECTA CON FLEET SDK
+// donation.js - VERSIÓN CORREGIDA SIN ERRORES DE SCOPE
 
 // Configuration
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
@@ -9,7 +9,6 @@ let isWalletConnected = false;
 let selectedAmount = 0;
 let ergoApi = null;
 let nautilusConnector = null;
-let FleetSDK = null;
 
 // Initialize donation functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -25,37 +24,6 @@ async function initializeDonation() {
     setupAmountSelection();
     setupWalletConnection();
     await checkNautilusAvailability();
-}
-
-// Cargar Fleet SDK usando ESM
-async function loadFleetSDK() {
-    try {
-        console.log('📦 Loading Fleet SDK...');
-        
-        // Usar esm.sh para cargar Fleet SDK como módulos ES
-        const [
-            { TransactionBuilder, OutputBuilder },
-            { Address }
-        ] = await Promise.all([
-            import('https://esm.sh/@fleet-sdk/core@0.1.0-alpha.20'),
-            import('https://esm.sh/@fleet-sdk/common@0.1.0-alpha.20')
-        ]);
-
-        FleetSDK = {
-            TransactionBuilder,
-            OutputBuilder,
-            Address
-        };
-
-        console.log('✅ Fleet SDK loaded successfully');
-        console.log('📋 Available classes:', Object.keys(FleetSDK));
-        
-    } catch (error) {
-        console.error('❌ Failed to load Fleet SDK:', error);
-        console.log('🔄 Fallback: Using manual implementation...');
-        // En caso de error, usar implementación manual como fallback
-        FleetSDK = null;
-    }
 }
 
 // Setup amount selection buttons
@@ -231,75 +199,85 @@ async function connectWallet() {
     }
 }
 
-// Make donation using Fleet SDK TransactionBuilder
-async function makeDonationWithFleet() {
-    console.log('🚀 === BUILDING DONATION WITH FLEET SDK ===');
+// Base58 decode function
+function base58Decode(str) {
+    const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const ALPHABET_MAP = {};
+    for (let i = 0; i < ALPHABET.length; i++) {
+        ALPHABET_MAP[ALPHABET[i]] = i;
+    }
+
+    let decoded = [0];
     
-    const amount = selectedAmount || parseFloat(document.getElementById('customAmount')?.value || 0);
-    const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
-    
-    try {
-        // Get current height
-        const currentHeight = await ergoApi.get_current_height();
-        console.log('📊 Current height:', currentHeight);
-
-        // Get UTXOs
-        const utxos = await ergoApi.get_utxos();
-        if (!utxos || utxos.length === 0) {
-            throw new Error('No UTXOs available');
-        }
-        console.log('📦 Available UTXOs:', utxos.length);
-
-        // Get change address (user's address from first UTXO)
-        const userAddress = FleetSDK.Address.fromErgoTree(utxos[0].ergoTree).toString();
-        console.log('👤 User address for change:', userAddress);
-
-        console.log('🏗️ Building transaction with Fleet SDK...');
-        console.log('  - Donation amount:', amount, 'ERG');
-        console.log('  - Recipient:', DONATION_ADDRESS);
-        console.log('  - Change address:', userAddress);
-
-        // Build transaction usando Fleet SDK TransactionBuilder
-        const unsignedTransaction = new FleetSDK.TransactionBuilder(currentHeight)
-            .from(utxos)  // Fleet selecciona automáticamente los inputs necesarios
-            .to(
-                new FleetSDK.OutputBuilder(amountNanoErg, DONATION_ADDRESS)
-            )  // Output de donación
-            .sendChangeTo(userAddress)  // Cambio automático al usuario
-            .payMinFee()  // Fee mínimo automático (0.0011 ERG)
-            .build();
-
-        console.log('✅ FLEET SDK TRANSACTION BUILT:');
-        console.log('📥 INPUTS:', unsignedTransaction.inputs.length);
-        console.log('📤 OUTPUTS:', unsignedTransaction.outputs.length);
+    for (let i = 0; i < str.length; i++) {
+        let carry = ALPHABET_MAP[str[i]];
+        if (carry === undefined) throw new Error('Invalid base58 character');
         
-        // Analizar outputs
-        unsignedTransaction.outputs.forEach((output, index) => {
-            const ergAmount = Number(BigInt(output.value)) / 1000000000;
-            const outputAddress = FleetSDK.Address.fromErgoTree(output.ergoTree).toString();
-            
-            if (outputAddress === DONATION_ADDRESS) {
-                console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
-            } else if (outputAddress === userAddress) {
-                console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets?.length || 0} tokens → (back to you)`);
-            } else {
-                console.log(`  ${index + 1}. OTHER: ${ergAmount} ERG → ${outputAddress.substring(0, 10)}...`);
-            }
-        });
+        for (let j = 0; j < decoded.length; j++) {
+            carry += decoded[j] * 58;
+            decoded[j] = carry & 255;
+            carry >>= 8;
+        }
+        
+        while (carry > 0) {
+            decoded.push(carry & 255);
+            carry >>= 8;
+        }
+    }
+    
+    // Handle leading zeros
+    for (let i = 0; i < str.length && str[i] === '1'; i++) {
+        decoded.push(0);
+    }
+    
+    return new Uint8Array(decoded.reverse());
+}
 
-        return unsignedTransaction;
+// Manual address to ErgoTree conversion
+function addressToErgoTree(address) {
+    console.log('🔄 Converting address to ErgoTree:', address);
+
+    try {
+        // Base58 decode
+        const decoded = base58Decode(address);
+        
+        // Verify P2PK format
+        if (decoded.length < 34 || decoded[0] !== 0x01) {
+            throw new Error(`Invalid P2PK address format`);
+        }
+
+        // Extract public key (bytes 1-33)
+        const publicKey = decoded.slice(1, 34);
+        const publicKeyHex = Array.from(publicKey, byte => 
+            byte.toString(16).padStart(2, '0')
+        ).join('');
+
+        // Build P2PK ErgoTree
+        const ergoTree = `0008cd${publicKeyHex}`;
+
+        console.log('✅ Address conversion successful');
+        console.log('  - Public Key:', publicKeyHex);
+        console.log('  - ErgoTree:', ergoTree);
+
+        return ergoTree;
 
     } catch (error) {
-        console.error('❌ Fleet SDK transaction building failed:', error);
-        throw error;
+        console.error('❌ Address conversion failed:', error);
+        
+        // Hardcoded fallback for donation address
+        if (address === DONATION_ADDRESS) {
+            console.log('🔧 Using hardcoded ErgoTree for donation address');
+            return "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
+        }
+        
+        throw new Error(`Cannot convert address: ${error.message}`);
     }
 }
 
-// Fallback manual implementation siguiendo principios de Fleet SDK
-async function makeDonationManual() {
+// Manual transaction building siguiendo principios de Fleet SDK
+async function buildDonationTransaction(amount) {
     console.log('🔧 === MANUAL TRANSACTION BUILDING (Fleet SDK Style) ===');
     
-    const amount = selectedAmount || parseFloat(document.getElementById('customAmount')?.value || 0);
     const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
     
     try {
@@ -467,81 +445,6 @@ async function makeDonationManual() {
     }
 }
 
-// Manual address to ErgoTree conversion
-function addressToErgoTree(address) {
-    console.log('🔄 Converting address to ErgoTree:', address);
-
-    try {
-        // Base58 decode
-        const decoded = base58Decode(address);
-        
-        // Verify P2PK format
-        if (decoded.length < 34 || decoded[0] !== 0x01) {
-            throw new Error(`Invalid P2PK address format`);
-        }
-
-        // Extract public key (bytes 1-33)
-        const publicKey = decoded.slice(1, 34);
-        const publicKeyHex = Array.from(publicKey, byte => 
-            byte.toString(16).padStart(2, '0')
-        ).join('');
-
-        // Build P2PK ErgoTree
-        const ergoTree = `0008cd${publicKeyHex}`;
-
-        console.log('✅ Address conversion successful');
-        console.log('  - Public Key:', publicKeyHex);
-        console.log('  - ErgoTree:', ergoTree);
-
-        return ergoTree;
-
-    } catch (error) {
-        console.error('❌ Address conversion failed:', error);
-        
-        // Hardcoded fallback for donation address
-        if (address === DONATION_ADDRESS) {
-            console.log('🔧 Using hardcoded ErgoTree for donation address');
-            return "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
-        }
-        
-        throw new Error(`Cannot convert address: ${error.message}`);
-    }
-}
-
-// Base58 decode function
-function base58Decode(str) {
-    const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-    const ALPHABET_MAP = {};
-    for (let i = 0; i < ALPHABET.length; i++) {
-        ALPHABET_MAP[ALPHABET[i]] = i;
-    }
-
-    let decoded = [0];
-    
-    for (let i = 0; i < str.length; i++) {
-        let carry = ALPHABET_MAP[str[i]];
-        if (carry === undefined) throw new Error('Invalid base58 character');
-        
-        for (let j = 0; j < decoded.length; j++) {
-            carry += decoded[j] * 58;
-            decoded[j] = carry & 255;
-            carry >>= 8;
-        }
-        
-        while (carry > 0) {
-            decoded.push(carry & 255);
-            carry >>= 8;
-        }
-    }
-    
-    // Handle leading zeros
-    for (let i = 0; i < str.length && str[i] === '1'; i++) {
-        decoded.push(0);
-    }
-    
-    return new Uint8Array(decoded.reverse());
-}
-
 // Main donation function
 async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
@@ -566,16 +469,17 @@ async function makeDonation() {
     try {
         donateBtn.disabled = true;
         donateBtn.innerHTML = '<div class="loading"></div> Building transaction...';
-        showStatus('donationStatus', '⚡ Building transaction with Fleet SDK...', 'info');
+        showStatus('donationStatus', '⚡ Building transaction with Fleet SDK principles...', 'info');
 
-        let unsignedTransaction;
-
-        // Usar implementación manual (estilo Fleet SDK)
+        // Build transaction
         console.log('🔧 Building transaction manually (Fleet SDK principles)');
-        unsignedTransaction = await makeDonationManual();
+        const result = await buildDonationTransaction(amount);
+        
+        const unsignedTransaction = result.transaction;
+        const tokenCount = result.tokenCount;
 
         showStatus('donationStatus', 
-            `✍️ Please confirm in Nautilus:\n• Donating ${amount} ERG to donation address\n• Network fee: 0.0011 ERG (automatic)\n• ${allTokens && allTokens.size > 0 ? `Your ${allTokens.size} token types will be preserved` : 'Change will be returned to you'}`, 
+            `✍️ Please confirm in Nautilus:\n• Donating ${amount} ERG to donation address\n• Network fee: 0.0011 ERG (automatic)\n• ${tokenCount > 0 ? `Your ${tokenCount} token types will be preserved` : 'Change will be returned to you'}`, 
             'info'
         );
 
