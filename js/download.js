@@ -1,4 +1,4 @@
-// download.js - Blockchain download functionality (Improved with progress bar)
+// download.js - Clean and simple blockchain download
 
 // Token URLs for Scypher script fragments
 const TOKEN_URLS = [
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Main download handler with enhanced visual feedback
+// Main download handler - SIMPLIFICADO
 async function handleDownload() {
     const downloadBtn = document.getElementById('downloadBtn');
     const originalContent = downloadBtn.innerHTML;
@@ -24,66 +24,59 @@ async function handleDownload() {
     try {
         // Update button state
         downloadBtn.disabled = true;
-        downloadBtn.innerHTML = '<div class="loading"></div> ' + getTranslation('download.progress.connecting');
-        
-        // Create enhanced status display
+        downloadBtn.innerHTML = '<div class="loading"></div> Downloading...';
+
+        // Create clean status display
         createProgressDisplay();
-        showProgressStatus(getTranslation('download.progress.initializing'), 'loading', 0);
+        showProgress(5, '🔗', 'Connecting to Ergo blockchain...');
+        await sleep(300);
 
-        // Phase 1: Initialize connection
-        await updateProgress(10, getTranslation('download.progress.connecting'));
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Fetch fragments
+        showProgress(15, '📦', 'Fetching fragments from blockchain...');
+        const base64Content = await fetchAllTokenData();
 
-        // Phase 2: Fetch fragments from blockchain
-        await updateProgress(20, getTranslation('download.progress.fetching'));
-        const base64Content = await fetchAllTokenDataWithProgress();
+        // Reconstruct file
+        showProgress(85, '🔧', 'Reconstructing XZ archive...');
+        await sleep(200);
 
-        // Phase 3: Reconstruct XZ file
-        await updateProgress(85, getTranslation('download.progress.reconstructing'));
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Convert base64 to binary data (XZ file)
         const binaryString = atob(base64Content);
         const xzBytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
             xzBytes[i] = binaryString.charCodeAt(i);
         }
 
-        // Phase 4: Prepare download
-        await updateProgress(95, getTranslation('download.progress.preparing'));
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Prepare download
+        showProgress(95, '📁', 'Preparing file download...');
+        await sleep(200);
 
-        // Create direct XZ download (no decompression)
+        // Create download
         createXZDownload(xzBytes, 'scypher.sh.xz');
 
-        // Phase 5: Complete
-        await updateProgress(100, getTranslation('download.progress.success'));
-        showProgressStatus(getTranslation('download.progress.success'), 'success', 100);
+        // Complete
+        showProgress(100, '✅', 'Download completed successfully!');
+        showSuccess('scypher.sh.xz downloaded from blockchain!');
 
-        // Update button to show completion
-        downloadBtn.innerHTML = '✅ ' + getTranslation('download.progress.completed');
-        
-        // Reset button after success
+        // Reset button
+        downloadBtn.innerHTML = '✅ Download Complete';
         setTimeout(() => {
             downloadBtn.disabled = false;
             downloadBtn.innerHTML = originalContent;
-            hideProgressDisplay();
-        }, 4000);
+            hideProgress();
+        }, 3000);
 
     } catch (error) {
         console.error('Download error:', error);
-        showProgressStatus(`❌ ${getTranslation('download.progress.error')}: ${error.message}`, 'error', 0);
-        
-        // Reset button on error
+        showError(`Download failed: ${error.message}`);
+
         setTimeout(() => {
             downloadBtn.disabled = false;
             downloadBtn.innerHTML = originalContent;
-            hideProgressDisplay();
-        }, 5000);
+            hideProgress();
+        }, 4000);
     }
 }
 
-// Create enhanced progress display
+// Create simple progress display
 function createProgressDisplay() {
     const statusElement = document.getElementById('downloadStatus');
     if (statusElement) {
@@ -91,10 +84,10 @@ function createProgressDisplay() {
             <div class="download-progress-container">
                 <div class="progress-info">
                     <div class="progress-icon">🔗</div>
-                    <div class="progress-text">Initializing...</div>
+                    <div class="progress-text">Starting download...</div>
                 </div>
                 <div class="progress-bar-container">
-                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
                     <div class="progress-percentage" id="progressPercentage">0%</div>
                 </div>
                 <div class="progress-steps">
@@ -110,197 +103,146 @@ function createProgressDisplay() {
     }
 }
 
-// Update progress with smooth animation
-async function updateProgress(percentage, message, icon = '🔗') {
+// Simple progress update
+function showProgress(percentage, icon, message) {
     const progressBar = document.getElementById('progressBar');
     const progressPercentage = document.getElementById('progressPercentage');
     const progressText = document.querySelector('.progress-text');
     const progressIcon = document.querySelector('.progress-icon');
 
     if (progressBar && progressPercentage && progressText && progressIcon) {
-        // Update text and icon
         progressText.textContent = message;
         progressIcon.textContent = icon;
-        
-        // Animate progress bar
         progressBar.style.width = percentage + '%';
         progressPercentage.textContent = percentage + '%';
 
         // Update step dots
-        updateStepDots(percentage);
-        
-        // Wait for animation
-        await new Promise(resolve => setTimeout(resolve, 300));
+        updateSteps(percentage);
     }
 }
 
-// Update step dots based on progress
-function updateStepDots(percentage) {
+// Update step indicators
+function updateSteps(percentage) {
     const stepDots = document.querySelectorAll('.step-dot');
     stepDots.forEach((dot, index) => {
         const stepPercentage = (index + 1) * 25;
         dot.classList.remove('active', 'completed');
-        
+
         if (percentage >= stepPercentage) {
             dot.classList.add('completed');
-        } else if (percentage >= stepPercentage - 25) {
+        } else if (percentage > stepPercentage - 25) {
             dot.classList.add('active');
         }
     });
 }
 
-// Enhanced fetch function with detailed progress
-async function fetchAllTokenDataWithProgress() {
+// Fetch fragments with clean progress
+async function fetchAllTokenData() {
     const fragments = [];
     const totalFragments = TOKEN_URLS.length;
-    const baseProgress = 20; // Starting progress
-    const fragmentProgress = 65; // Progress range for fragments (20% to 85%)
 
     for (let i = 0; i < TOKEN_URLS.length; i++) {
         const fragmentNumber = i + 1;
-        const currentProgress = baseProgress + (fragmentProgress * (i / totalFragments));
-        
-        const progressMessage = getTranslation('download.progress.fragment')
-            .replace('{current}', fragmentNumber)
-            .replace('{total}', totalFragments);
-            
-        await updateProgress(currentProgress, progressMessage, '📦');
+        const progressPercent = 15 + (65 * (i / totalFragments));
+
+        showProgress(
+            Math.round(progressPercent),
+            '📦',
+            `Downloading fragment ${fragmentNumber} of ${totalFragments}...`
+        );
 
         try {
             const response = await fetch(TOKEN_URLS[i]);
             if (!response.ok) {
-                throw new Error(`${getTranslation('download.progress.fetchError')} ${fragmentNumber}: ${response.statusText}`);
+                throw new Error(`Fragment ${fragmentNumber} failed: ${response.statusText}`);
             }
 
             const data = await response.json();
             if (!data.description) {
-                throw new Error(`${getTranslation('download.progress.noDescription')} ${fragmentNumber}`);
+                throw new Error(`Fragment ${fragmentNumber} has no data`);
             }
 
             fragments.push(data.description);
-            
+
             // Show completion for this fragment
-            const completedProgress = baseProgress + (fragmentProgress * ((i + 1) / totalFragments));
-            await updateProgress(completedProgress, `✅ Fragment ${fragmentNumber}/${totalFragments} completed`, '✅');
-            
-            // Brief pause between fragments for better UX
-            if (i < TOKEN_URLS.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
+            const completedPercent = 15 + (65 * ((i + 1) / totalFragments));
+            showProgress(
+                Math.round(completedPercent),
+                '✅',
+                `Fragment ${fragmentNumber}/${totalFragments} completed`
+            );
+
+            await sleep(100); // Brief pause
 
         } catch (error) {
-            throw new Error(`${getTranslation('download.progress.fragmentFailed')} ${fragmentNumber}: ${error.message}`);
+            throw new Error(`Fragment ${fragmentNumber} error: ${error.message}`);
         }
     }
 
-    // Show combining phase
-    await updateProgress(80, getTranslation('download.progress.combining'), '🧩');
-    console.log('🧩 Combining all base64 fragments...');
+    // Combining phase
+    showProgress(80, '🔧', 'Combining fragments...');
+    await sleep(200);
 
-    // Combine all fragments
-    const combinedBase64 = fragments.join('');
-    
-    console.log(`✅ Successfully combined ${fragments.length} fragments`);
-    console.log(`📊 Total base64 length: ${combinedBase64.length} characters`);
-    
-    return combinedBase64;
+    return fragments.join('');
 }
 
-// Show progress status with better formatting
-function showProgressStatus(message, type = 'info', percentage = 0) {
+// Show success state
+function showSuccess(message) {
     const statusElement = document.getElementById('downloadStatus');
     if (statusElement) {
-        if (type === 'success') {
-            statusElement.innerHTML = `
-                <div class="download-success">
-                    <div class="success-icon">🎉</div>
-                    <div class="success-message">${message}</div>
-                    <div class="success-details">File ready for download!</div>
-                </div>
-            `;
-            statusElement.className = 'download-status success';
-        } else if (type === 'error') {
-            statusElement.innerHTML = `
-                <div class="download-error">
-                    <div class="error-icon">❌</div>
-                    <div class="error-message">${message}</div>
-                </div>
-            `;
-            statusElement.className = 'download-status error';
-        }
-        // For loading state, the progress display is already created
+        statusElement.innerHTML = `
+            <div class="download-success">
+                <div class="success-icon">🎉</div>
+                <div class="success-message">${message}</div>
+                <div class="success-details">File is ready in your downloads folder</div>
+            </div>
+        `;
+        statusElement.className = 'download-status success';
     }
 }
 
-// Hide progress display
-function hideProgressDisplay() {
+// Show error state
+function showError(message) {
+    const statusElement = document.getElementById('downloadStatus');
+    if (statusElement) {
+        statusElement.innerHTML = `
+            <div class="download-error">
+                <div class="error-icon">❌</div>
+                <div class="error-message">${message}</div>
+            </div>
+        `;
+        statusElement.className = 'download-status error';
+    }
+}
+
+// Hide progress
+function hideProgress() {
     const statusElement = document.getElementById('downloadStatus');
     if (statusElement) {
         setTimeout(() => {
             statusElement.style.display = 'none';
-            statusElement.innerHTML = '';
         }, 1000);
     }
 }
 
-// Create XZ file download directly (no decompression)
+// Create XZ download
 function createXZDownload(xzBytes, filename) {
-    console.log('📦 Creating XZ file download...');
-    console.log(`📊 XZ file size: ${xzBytes.length} bytes`);
-    console.log(`📄 Filename: ${filename}`);
-
-    // Create blob with XZ binary data
-    const blob = new Blob([xzBytes], { 
-        type: 'application/x-xz' // Proper MIME type for XZ files
-    });
-
-    // Create download link
+    const blob = new Blob([xzBytes], { type: 'application/x-xz' });
     const url = URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
+
     downloadLink.href = url;
     downloadLink.download = filename;
     downloadLink.style.display = 'none';
 
-    // Trigger download
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
 
-    // Clean up blob URL
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-        console.log('🧹 Blob URL cleaned up');
-    }, 100);
-
-    console.log('✅ XZ file download initiated successfully');
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
-// Get translation with fallback
-function getTranslation(key) {
-    try {
-        if (typeof window !== 'undefined' && typeof window.getTranslation === 'function') {
-            return window.getTranslation(key);
-        }
-    } catch (e) {
-        console.warn('⚠️ Translation error:', e.message);
-    }
-
-    // Fallback translations for new download messages
-    const fallbacks = {
-        'download.progress.connecting': 'Connecting to Ergo blockchain...',
-        'download.progress.initializing': 'Initializing decentralized download...',
-        'download.progress.fetching': 'Fetching script fragments from blockchain...',
-        'download.progress.fragment': 'Downloading fragment {current}/{total}...',
-        'download.progress.combining': 'Combining base64 fragments...',
-        'download.progress.reconstructing': 'Reconstructing XZ archive...',
-        'download.progress.preparing': 'Preparing download...',
-        'download.progress.success': 'Successfully downloaded scypher.sh.xz from blockchain!',
-        'download.progress.completed': 'Download Completed',
-        'download.progress.error': 'Download failed',
-        'download.progress.fetchError': 'Failed to fetch fragment',
-        'download.progress.noDescription': 'Fragment has no description field',
-        'download.progress.fragmentFailed': 'Fragment download failed'
-    };
-
-    return fallbacks[key] || key;
+// Simple sleep function
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
