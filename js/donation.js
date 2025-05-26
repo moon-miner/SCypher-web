@@ -367,15 +367,15 @@ async function buildDonationTransaction(amount) {
         console.log('  - To address:', DONATION_ADDRESS);
         console.log('  - ErgoTree:', donationErgoTree);
 
-        // OUTPUT 2: Change (SIN deducir fee aquí - Ergo lo maneja automáticamente)
-        // En Ergo, el fee se deduce automáticamente del total
-        const changeValue = totalInputValue - amountNanoErg; // Sin deducir fee manualmente
+        // OUTPUT 2: Change (DEDUCIENDO fee explícitamente)
+        // El fee debe ser la diferencia exacta entre inputs y outputs
+        const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE; // Deducir fee explícitamente
         
         console.log('🔍 BALANCE CALCULATION:');
         console.log('  - Total inputs:', Number(totalInputValue) / 1000000000, 'ERG');
         console.log('  - Donation output:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Change calculated:', Number(changeValue) / 1000000000, 'ERG');
-        console.log('  - Fee (handled by Ergo):', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - Fee deducted:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - Change remaining:', Number(changeValue) / 1000000000, 'ERG');
         
         if (changeValue > 0n || allTokens.size > 0) {
             // Convert tokens for change output
@@ -391,28 +391,31 @@ async function buildDonationTransaction(amount) {
                 console.log('⚠️ Adjusting for minimum token box value');
             }
 
-            const changeOutput = {
-                value: finalChangeValue.toString(),
-                ergoTree: senderErgoTree, // Back to sender
-                assets: changeTokens, // All tokens back to sender
-                additionalRegisters: {},
-                creationHeight: currentHeight
-            };
-            outputs.push(changeOutput);
+            // Solo crear output de cambio si hay ERG positivo o tokens
+            if (finalChangeValue > 0n || changeTokens.length > 0) {
+                const changeOutput = {
+                    value: finalChangeValue.toString(),
+                    ergoTree: senderErgoTree, // Back to sender
+                    assets: changeTokens, // All tokens back to sender
+                    additionalRegisters: {},
+                    creationHeight: currentHeight
+                };
+                outputs.push(changeOutput);
 
-            console.log('✅ OUTPUT 2 - CHANGE:');
-            console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
-            console.log('  - Tokens returned:', changeTokens.length);
-            console.log('  - Back to sender ErgoTree:', senderErgoTree);
+                console.log('✅ OUTPUT 2 - CHANGE:');
+                console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
+                console.log('  - Tokens returned:', changeTokens.length);
+                console.log('  - Back to sender ErgoTree:', senderErgoTree);
 
-            if (changeTokens.length > 0) {
-                console.log('  - Token details:');
-                changeTokens.forEach(token => {
-                    console.log(`    * ${token.tokenId.substring(0, 8)}...${token.tokenId.substring(token.tokenId.length - 8)}: ${token.amount}`);
-                });
+                if (changeTokens.length > 0) {
+                    console.log('  - Token details:');
+                    changeTokens.forEach(token => {
+                        console.log(`    * ${token.tokenId.substring(0, 8)}...${token.tokenId.substring(token.tokenId.length - 8)}: ${token.amount}`);
+                    });
+                }
             }
         } else {
-            console.log('ℹ️  No change output needed');
+            console.log('ℹ️  No change output needed (exact amount)');
         }
 
         // Build final transaction (Fleet SDK .build())
