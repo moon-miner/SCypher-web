@@ -452,7 +452,14 @@ async function makeDonationManual() {
         console.log(`  - Change: ${changeValue > 0n ? Number(changeValue) / 1000000000 : 0} ERG`);
         console.log('════════════════════════════════════════');
 
-        return transaction;
+        // Retornar tanto la transacción como información útil
+        return {
+            transaction: transaction,
+            tokenCount: allTokens.size,
+            changeAmount: changeValue,
+            totalInputs: totalValue,
+            selectedUtxos: selectedUtxos.length
+        };
 
     } catch (error) {
         console.error('❌ Manual transaction building failed:', error);
@@ -584,6 +591,7 @@ async function makeDonation() {
         console.log('  - Transaction ID:', txId);
         console.log('  - Amount donated:', amount, 'ERG');
         console.log('  - Recipient:', DONATION_ADDRESS);
+        console.log('  - Tokens preserved:', tokenCount);
 
         showStatus('donationStatus',
             `🎉 Donation successful! ${amount} ERG sent to ${DONATION_ADDRESS.substring(0, 10)}...${DONATION_ADDRESS.substring(DONATION_ADDRESS.length - 10)}. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`,
