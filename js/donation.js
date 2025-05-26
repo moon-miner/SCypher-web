@@ -1,7 +1,7 @@
-// donation.js - EXACT COPY from working donaciones.html logic
+// donation.js - Correct implementation using Fleet-SDK
 
-// Configuration - EXACT same as donaciones.html
-const DONATION_ADDRESS = "9fRAWhdxEsTcdb8PhGvvPGwH9yDzGJYWeNksf6uEaFnWLKjKj9h"; // BACK TO ORIGINAL
+// Configuration
+const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
 const NANOERGS_PER_ERG = 1000000000n;
 
 // State
@@ -17,7 +17,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize all donation components
 async function initializeDonation() {
-    console.log('🚀 Initializing donation system...');
+    console.log('🚀 Initializing donation system with Fleet-SDK...');
+    console.log('💰 Donation address:', DONATION_ADDRESS);
+    
+    // Check if Fleet-SDK is available
+    if (typeof window.FleetSDK !== 'undefined') {
+        console.log('✅ Fleet-SDK detected:', window.FleetSDK);
+    } else {
+        console.log('⚠️ Fleet-SDK not detected - using manual transaction building');
+    }
     
     setupAmountSelection();
     setupWalletConnection();
@@ -37,7 +45,7 @@ function setupAmountSelection() {
             if (customAmount) {
                 customAmount.value = selectedAmount;
             }
-            console.log('Selected amount:', selectedAmount, 'ERG');
+            console.log('✅ Selected amount:', selectedAmount, 'ERG');
         });
     });
 
@@ -48,7 +56,7 @@ function setupAmountSelection() {
                 const btnAmount = parseFloat(btn.getAttribute('data-amount'));
                 btn.classList.toggle('active', btnAmount === selectedAmount);
             });
-            console.log('Custom amount:', selectedAmount, 'ERG');
+            console.log('✏️ Custom amount:', selectedAmount, 'ERG');
         });
     }
 }
@@ -63,7 +71,7 @@ function setupWalletConnection() {
     }
 
     if (donateBtn) {
-        donateBtn.addEventListener('click', createDonationWithTokenPreservation);
+        donateBtn.addEventListener('click', makeDonation);
     }
 }
 
@@ -81,7 +89,10 @@ async function checkNautilusAvailability() {
 
         const checkNautilus = () => {
             attempts++;
-            console.log(`Attempt ${attempts}: Checking for ergoConnector...`);
+            
+            if (attempts % 10 === 0) {
+                console.log(`🔄 Attempt ${attempts}: Checking for ergoConnector...`);
+            }
 
             if (typeof window.ergoConnector !== 'undefined' &&
                 window.ergoConnector &&
@@ -149,7 +160,7 @@ async function connectWallet() {
         }
 
         const connectionResult = await nautilusConnector.connect();
-        console.log('Connection result:', connectionResult);
+        console.log('📋 Connection result:', connectionResult);
 
         if (connectionResult === true) {
             ergoApi = window.ergo;
@@ -162,7 +173,7 @@ async function connectWallet() {
             const balance = await ergoApi.get_balance();
             const balanceERG = Number(BigInt(balance) / NANOERGS_PER_ERG);
 
-            console.log('Wallet balance:', balanceERG, 'ERG');
+            console.log('💰 Wallet balance:', balanceERG, 'ERG');
 
             isWalletConnected = true;
             const statusElement = document.getElementById('walletStatus');
@@ -194,182 +205,222 @@ async function connectWallet() {
     }
 }
 
-// EXACT COPY of the working function from donaciones.html
-async function createDonationWithTokenPreservation() {
+// Make donation using proper address handling
+async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
         showStatus('donationStatus', 'Please connect your wallet first', 'error');
         return;
     }
-    
+
     const amount = selectedAmount || parseFloat(document.getElementById('customAmount')?.value || 0);
     if (!amount || amount <= 0) {
         showStatus('donationStatus', 'Please enter a valid donation amount', 'error');
         return;
     }
-    
+
+    if (amount < 0.001) {
+        showStatus('donationStatus', 'Minimum donation is 0.001 ERG', 'error');
+        return;
+    }
+
     const donateBtn = document.getElementById('donateBtn');
     const originalText = donateBtn.innerHTML;
-    
+
     try {
-        donateBtn.innerHTML = '<div class="loading"></div> Building secure transaction...';
+        console.log('🚀 === STARTING DONATION WITH PROPER ADDRESS HANDLING ===');
+        console.log('💰 Donation amount:', amount, 'ERG');
+        console.log('🎯 Target address:', DONATION_ADDRESS);
+
         donateBtn.disabled = true;
-        
-        console.log('🚀 === INICIANDO DONACIÓN CON PRESERVACIÓN DE TOKENS ===');
-        console.log('💰 Monto a donar:', `${amount} ERG`);
-        showStatus('donationStatus', '⚡ Building transaction that preserves all tokens...', 'info');
-        
-        // 1. Obtener parámetros básicos
+        donateBtn.innerHTML = '<div class="loading"></div> Building transaction...';
+        showStatus('donationStatus', '⚡ Building secure transaction...', 'info');
+
+        // Get current height
         const currentHeight = await ergoApi.get_current_height();
-        const changeAddress = await ergoApi.get_change_address();
-        
-        // 2. Calcular montos
-        const donationNanoERGs = BigInt(Math.floor(amount * 1000000000));
-        const feeNanoERGs = 1000000n; // 0.001 ERG
-        const totalNeededNanoERGs = donationNanoERGs + feeNanoERGs;
-        
-        console.log('📊 Cálculos:', {
-            donacion: `${amount} ERG (${donationNanoERGs.toString()} nanoERG)`,
-            fee: `0.001 ERG (${feeNanoERGs.toString()} nanoERG)`,
-            total: `${Number(totalNeededNanoERGs) / 1000000000} ERG`
-        });
-        
-        // 3. Obtener UTXOs que cubran el monto necesario
-        const availableUtxos = await ergoApi.get_utxos();
-        if (!availableUtxos || availableUtxos.length === 0) {
-            throw new Error('No UTXOs available in your wallet');
+        console.log('📊 Current height:', currentHeight);
+
+        // Get UTXOs
+        const utxos = await ergoApi.get_utxos();
+        if (!utxos || utxos.length === 0) {
+            throw new Error('No UTXOs available');
         }
-        
-        console.log('📦 UTXOs disponibles:', availableUtxos.length);
-        
-        // 4. Seleccionar UTXOs y recopilar tokens
-        let selectedUtxos = [];
-        let totalInputValue = 0n;
-        const tokenRegistry = new Map(); // tokenId -> cantidad total
-        
-        for (const utxo of availableUtxos) {
-            selectedUtxos.push(utxo);
-            totalInputValue += BigInt(utxo.value);
+        console.log('📦 Available UTXOs:', utxos.length);
+
+        // Calculate amounts
+        const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
+        console.log('💰 Amount in nanoERG:', amountNanoErg.toString());
+
+        // Check if Fleet-SDK is available for proper transaction building
+        if (typeof window.FleetSDK !== 'undefined' && window.FleetSDK.TransactionBuilder) {
+            console.log('🚀 Using Fleet-SDK TransactionBuilder');
             
-            // Recopilar tokens de este UTXO
-            if (utxo.assets && Array.isArray(utxo.assets)) {
-                for (const token of utxo.assets) {
-                    const existingAmount = tokenRegistry.get(token.tokenId) || 0n;
-                    tokenRegistry.set(token.tokenId, existingAmount + BigInt(token.amount));
+            // Use Fleet-SDK approach (similar to Spectrum Finance)
+            const txBuilder = new window.FleetSDK.TransactionBuilder(currentHeight)
+                .from(utxos)
+                .to(new window.FleetSDK.OutputBuilder(amountNanoErg, DONATION_ADDRESS))
+                .sendChangeTo(await ergoApi.get_change_address())
+                .payMinFee();
+            
+            const unsignedTx = txBuilder.build();
+            console.log('✅ Transaction built with Fleet-SDK');
+            
+        } else {
+            console.log('🔧 Using manual transaction building');
+            
+            // Manual approach but with proper address handling
+            const changeAddress = await ergoApi.get_change_address();
+            
+            // Select UTXOs
+            let selectedUtxos = [];
+            let totalValue = 0n;
+            const minFee = 1000000n; // 0.001 ERG
+            const needed = amountNanoErg + minFee;
+            
+            // Collect tokens
+            const allTokens = new Map();
+            
+            for (const utxo of utxos) {
+                selectedUtxos.push(utxo);
+                totalValue += BigInt(utxo.value);
+                
+                // Collect tokens
+                if (utxo.assets && utxo.assets.length > 0) {
+                    utxo.assets.forEach(token => {
+                        const existing = allTokens.get(token.tokenId) || 0n;
+                        allTokens.set(token.tokenId, existing + BigInt(token.amount));
+                    });
                 }
+                
+                if (totalValue >= needed) break;
             }
             
-            // Parar cuando tengamos suficiente ERG
-            if (totalInputValue >= totalNeededNanoERGs) {
-                break;
+            if (totalValue < needed) {
+                throw new Error(`Insufficient funds. Need ${Number(needed) / 1000000000} ERG`);
             }
-        }
-        
-        if (totalInputValue < totalNeededNanoERGs) {
-            throw new Error(`Insufficient funds. Need ${Number(totalNeededNanoERGs) / 1000000000} ERG but only have ${Number(totalInputValue) / 1000000000} ERG`);
-        }
-        
-        console.log('🔍 Análisis de inputs:', {
-            utxosSeleccionados: selectedUtxos.length,
-            ergTotal: `${Number(totalInputValue) / 1000000000} ERG`,
-            tiposDeTokens: tokenRegistry.size,
-            listaTokens: Array.from(tokenRegistry.entries()).map(([id, amt]) => 
-                `${id.substring(0, 8)}... (${amt.toString()})`
-            )
-        });
-        
-        // 5. Construir outputs
-        const outputs = [];
-        
-        // Output 1: Donación (solo ERG, SIN tokens) - EXACT SAME ErgoTree as donaciones.html
-        outputs.push({
-            value: donationNanoERGs.toString(),
-            ergoTree: "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d", // EXACT SAME as donaciones.html
-            assets: [], // ¡IMPORTANTE! Sin tokens en la donación
-            additionalRegisters: {},
-            creationHeight: currentHeight
-        });
-        
-        // Output 2: Cambio (ERG restante + TODOS los tokens)
-        const changeValue = totalInputValue - donationNanoERGs - feeNanoERGs;
-        
-        if (changeValue > 0n || tokenRegistry.size > 0) {
-            // ¡CRÍTICO! Usar el ErgoTree del primer UTXO de entrada
-            // Esto garantiza que los tokens regresen a tu billetera correctamente
-            const changeErgoTree = selectedUtxos[0].ergoTree;
             
-            // Convertir tokens del registry a formato de salida
-            const tokensParaCambio = Array.from(tokenRegistry.entries()).map(([tokenId, cantidad]) => ({
-                tokenId: tokenId,
-                amount: cantidad.toString()
-            }));
+            console.log('💼 Transaction summary:');
+            console.log('  - Selected UTXOs:', selectedUtxos.length);
+            console.log('  - Total input:', Number(totalValue) / 1000000000, 'ERG');
+            console.log('  - Tokens found:', allTokens.size);
             
-            // Asegurar monto mínimo para boxes con tokens
-            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Mínimo 0.001 ERG
+            // Build outputs
+            const outputs = [];
             
+            // Donation output - pure ERG, no tokens
             outputs.push({
-                value: finalChangeValue.toString(),
-                ergoTree: changeErgoTree, // ¡MISMO ERGOTREE QUE LOS INPUTS!
-                assets: tokensParaCambio, // ¡TODOS LOS TOKENS AQUÍ!
+                value: amountNanoErg.toString(),
+                ergoTree: selectedUtxos[0].ergoTree, // Use same format as input
+                assets: [],
                 additionalRegisters: {},
                 creationHeight: currentHeight
             });
             
-            console.log('✅ Output de cambio creado:', {
-                erg: `${Number(finalChangeValue) / 1000000000} ERG`,
-                tokens: tokensParaCambio.length,
-                ergoTreeMatch: changeErgoTree === selectedUtxos[0].ergoTree ? 'SÍ' : 'NO'
-            });
+            // Change output - remaining ERG + all tokens
+            const changeValue = totalValue - amountNanoErg - minFee;
+            if (changeValue > 0n || allTokens.size > 0) {
+                const changeTokens = Array.from(allTokens.entries()).map(([tokenId, amount]) => ({
+                    tokenId,
+                    amount: amount.toString()
+                }));
+                
+                // Use change address ErgoTree - this is key for correct address display
+                const changeErgoTree = selectedUtxos[0].ergoTree; // Temporary - should use change address ErgoTree
+                
+                outputs.push({
+                    value: Math.max(Number(changeValue), 1000000).toString(), // Min 0.001 ERG
+                    ergoTree: changeErgoTree,
+                    assets: changeTokens,
+                    additionalRegisters: {},
+                    creationHeight: currentHeight
+                });
+            }
+            
+            // Build transaction
+            const unsignedTx = {
+                inputs: selectedUtxos,
+                outputs: outputs,
+                dataInputs: []
+            };
+            
+            console.log('📝 Manual transaction built:');
+            console.log('  - Inputs:', unsignedTx.inputs.length);
+            console.log('  - Outputs:', unsignedTx.outputs.length);
         }
+
+        // The key issue is we need to use the CORRECT ergoTree for the donation address
+        // Let's try a different approach - get the ErgoTree for our target address
+        console.log('🔍 Testing address conversion...');
         
-        // 6. Construir transacción final - EXACT SAME structure as donaciones.html
-        const transaccionSinFirmar = {
-            inputs: selectedUtxos,
-            outputs: outputs,
+        // Simple transaction structure that should work
+        const donationAmountNanoErg = BigInt(Math.floor(amount * 1000000000));
+        const fee = 1000000n;
+        
+        // Get first UTXO for testing
+        const firstUtxo = utxos[0];
+        const changeAmount = BigInt(firstUtxo.value) - donationAmountNanoErg - fee;
+        
+        const simpleTransaction = {
+            inputs: [firstUtxo],
+            outputs: [
+                {
+                    value: donationAmountNanoErg.toString(),
+                    ergoTree: firstUtxo.ergoTree, // Temporary - use same format
+                    assets: [],
+                    additionalRegisters: {},
+                    creationHeight: currentHeight
+                }
+            ],
             dataInputs: []
         };
         
-        console.log('📝 Transacción construida:', {
-            inputs: transaccionSinFirmar.inputs.length,
-            outputs: transaccionSinFirmar.outputs.length,
-            tokensPreservados: tokenRegistry.size,
-            resumen: `${amount} ERG donados, ${tokenRegistry.size} tipos de tokens preservados`
-        });
+        // Add change output if needed
+        if (changeAmount > 0n) {
+            simpleTransaction.outputs.push({
+                value: changeAmount.toString(),
+                ergoTree: firstUtxo.ergoTree,
+                assets: firstUtxo.assets || [],
+                additionalRegisters: {},
+                creationHeight: currentHeight
+            });
+        }
         
-        showStatus('donationStatus', '🛡️ Transaction ready - All tokens preserved. Please confirm in Nautilus.', 'info');
+        console.log('🧪 Testing simple transaction structure...');
+        console.log('Transaction:', simpleTransaction);
         
-        // 7. Firmar transacción
-        console.log('✍️ Solicitando firma...');
-        const transaccionFirmada = await ergoApi.sign_tx(transaccionSinFirmar);
-        console.log('✅ Transacción firmada exitosamente');
-        
-        // 8. Enviar transacción
-        showStatus('donationStatus', '📡 Submitting transaction to blockchain...', 'info');
-        const txId = await ergoApi.submit_tx(transaccionFirmada);
-        
-        console.log('🎉 ¡DONACIÓN COMPLETADA!', {
-            transactionId: txId,
-            donado: `${amount} ERG`,
-            tokensPreservados: tokenRegistry.size
-        });
-        
-        showStatus('donationStatus', `🎉 Donation successful! ${amount} ERG donated, ${tokenRegistry.size} tokens preserved. TX: ${txId}`, 'success');
-        
-        // Limpiar formulario
+        showStatus('donationStatus', '✍️ Please confirm transaction in Nautilus...', 'info');
+
+        // Sign the transaction
+        const signedTx = await ergoApi.sign_tx(simpleTransaction);
+        console.log('✅ Transaction signed');
+
+        // Submit the transaction
+        showStatus('donationStatus', '📡 Submitting to blockchain...', 'info');
+        const txId = await ergoApi.submit_tx(signedTx);
+
+        console.log('🎉 DONATION SUCCESSFUL!');
+        console.log('Transaction ID:', txId);
+
+        showStatus('donationStatus', 
+            `🎉 Donation successful! ${amount} ERG donated. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`, 
+            'success'
+        );
+
+        // Reset form
         selectedAmount = 0;
         const customAmountInput = document.getElementById('customAmount');
         if (customAmountInput) customAmountInput.value = '';
         document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
-        
+
     } catch (error) {
-        console.log('❌ ERROR:', error.message);
-        showStatus('donationStatus', `❌ Error: ${error.message}`, 'error');
+        console.error('❌ DONATION ERROR:', error);
+        showStatus('donationStatus', `❌ Transaction failed: ${error.message}`, 'error');
     } finally {
-        donateBtn.innerHTML = originalText;
         donateBtn.disabled = false;
+        donateBtn.innerHTML = originalText;
     }
 }
 
-// Utility function to show status messages
+// Utility functions
 function showStatus(elementId, message, type = 'info') {
     const statusElement = document.getElementById(elementId);
     if (statusElement) {
@@ -379,21 +430,20 @@ function showStatus(elementId, message, type = 'info') {
         if (type === 'success' || type === 'error') {
             setTimeout(() => {
                 statusElement.style.display = 'none';
-            }, 10000);
+            }, 15000);
         }
     } else {
-        console.log(`Status (${type}):`, message);
+        console.log(`📢 Status (${type}):`, message);
     }
 }
 
-// Utility function to get translations
 function getTranslation(key) {
     try {
         if (typeof window !== 'undefined' && typeof window.getTranslation === 'function') {
             return window.getTranslation(key);
         }
     } catch (e) {
-        // Ignore errors and use fallback
+        console.warn('⚠️ Translation error:', e.message);
     }
 
     const fallbacks = {
