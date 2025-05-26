@@ -1,4 +1,4 @@
-// donation.js - Token-safe donation functionality using Nautilus Wallet - FIXED VERSION
+// donation.js - Token-safe donation functionality using Nautilus Wallet - FINAL VERSION
 
 // Configuration - UPDATED ADDRESS
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
@@ -12,20 +12,15 @@ let nautilusConnector = null;
 
 // Initialize donation functionality
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDonation();
+    setTimeout(initializeDonation, 100);
 });
 
 // Initialize all donation components
 async function initializeDonation() {
     console.log('🚀 Initializing donation system...');
-
-    // Setup amount selection
+    
     setupAmountSelection();
-
-    // Setup wallet connection
     setupWalletConnection();
-
-    // Check for Nautilus
     await checkNautilusAvailability();
 }
 
@@ -36,33 +31,23 @@ function setupAmountSelection() {
 
     amountBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Remove active class from all buttons
             amountBtns.forEach(b => b.classList.remove('active'));
-
-            // Add active class to clicked button
             this.classList.add('active');
-
-            // Set amount
             selectedAmount = parseFloat(this.getAttribute('data-amount'));
             if (customAmount) {
                 customAmount.value = selectedAmount;
             }
-
             console.log('Selected amount:', selectedAmount, 'ERG');
         });
     });
 
-    // Custom amount input
     if (customAmount) {
         customAmount.addEventListener('input', function() {
             selectedAmount = parseFloat(this.value) || 0;
-
-            // Update button states
             amountBtns.forEach(btn => {
                 const btnAmount = parseFloat(btn.getAttribute('data-amount'));
                 btn.classList.toggle('active', btnAmount === selectedAmount);
             });
-
             console.log('Custom amount:', selectedAmount, 'ERG');
         });
     }
@@ -82,7 +67,7 @@ function setupWalletConnection() {
     }
 }
 
-// Check if Nautilus is available - FIXED VERSION
+// Check if Nautilus is available
 async function checkNautilusAvailability() {
     const statusElement = document.getElementById('walletStatus');
     const statusText = document.querySelector('.wallet-status .status-text');
@@ -90,16 +75,14 @@ async function checkNautilusAvailability() {
 
     console.log('🔍 Checking for Nautilus...');
 
-    // Wait for Nautilus to be injected
     return new Promise((resolve) => {
         let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max
+        const maxAttempts = 50;
 
         const checkNautilus = () => {
             attempts++;
             console.log(`Attempt ${attempts}: Checking for ergoConnector...`);
 
-            // Check for the correct Nautilus injection
             if (typeof window.ergoConnector !== 'undefined' &&
                 window.ergoConnector &&
                 typeof window.ergoConnector.nautilus !== 'undefined') {
@@ -149,7 +132,7 @@ async function checkNautilusAvailability() {
     });
 }
 
-// Connect to Nautilus Wallet - FIXED VERSION
+// Connect to Nautilus Wallet
 async function connectWallet() {
     const connectBtn = document.getElementById('connectWalletBtn');
     const originalText = connectBtn.textContent;
@@ -165,12 +148,10 @@ async function connectWallet() {
             throw new Error('Nautilus connector not available');
         }
 
-        // Request connection - FIXED: Use the correct method
         const connectionResult = await nautilusConnector.connect();
         console.log('Connection result:', connectionResult);
 
         if (connectionResult === true) {
-            // Get API context - FIXED: Use window.ergo directly
             ergoApi = window.ergo;
             if (!ergoApi) {
                 throw new Error('Ergo API context not available');
@@ -178,13 +159,11 @@ async function connectWallet() {
 
             console.log('✅ API context obtained');
 
-            // Get wallet info
             const balance = await ergoApi.get_balance();
             const balanceERG = Number(BigInt(balance) / NANOERGS_PER_ERG);
 
             console.log('Wallet balance:', balanceERG, 'ERG');
 
-            // Update UI
             isWalletConnected = true;
             const statusElement = document.getElementById('walletStatus');
             const statusText = document.querySelector('.wallet-status .status-text');
@@ -215,7 +194,7 @@ async function connectWallet() {
     }
 }
 
-// Make token-safe donation - COMPLETELY REWRITTEN
+// FIXED: Make token-safe donation - Using the EXACT same logic as donaciones.html
 async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
         showStatus('donationStatus', 'Please connect your wallet first', 'error');
@@ -239,14 +218,14 @@ async function makeDonation() {
         donateBtn.innerHTML = '<div class="loading"></div> Building secure transaction...';
         showStatus('donationStatus', '⚡ Building transaction that preserves all tokens...', 'info');
 
-        // Get basic parameters
+        // 1. Get basic parameters
         const currentHeight = await ergoApi.get_current_height();
         const changeAddress = await ergoApi.get_change_address();
 
         console.log('📊 Current height:', currentHeight);
         console.log('🏠 Change address:', changeAddress);
 
-        // Calculate amounts in nanoERGs
+        // 2. Calculate amounts in nanoERGs
         const donationNanoERGs = BigInt(Math.floor(amount * 1000000000));
         const feeNanoERGs = 1000000n; // 0.001 ERG
         const totalNeededNanoERGs = donationNanoERGs + feeNanoERGs;
@@ -256,7 +235,7 @@ async function makeDonation() {
         console.log('  - Fee:', feeNanoERGs.toString(), 'nanoERG');
         console.log('  - Total needed:', totalNeededNanoERGs.toString(), 'nanoERG');
 
-        // Get UTXOs
+        // 3. Get UTXOs
         const availableUtxos = await ergoApi.get_utxos();
         if (!availableUtxos || availableUtxos.length === 0) {
             throw new Error('No UTXOs available in your wallet');
@@ -264,7 +243,7 @@ async function makeDonation() {
 
         console.log('📦 Available UTXOs:', availableUtxos.length);
 
-        // Select UTXOs and collect tokens
+        // 4. Select UTXOs and collect tokens - EXACT SAME LOGIC AS donaciones.html
         let selectedUtxos = [];
         let totalInputValue = 0n;
         const tokenRegistry = new Map(); // tokenId -> total amount
@@ -297,22 +276,15 @@ async function makeDonation() {
         console.log('  - UTXOs selected:', selectedUtxos.length);
         console.log('  - Total ERG:', Number(totalInputValue) / 1000000000);
         console.log('  - Token types:', tokenRegistry.size);
-        console.log('  - Token list:', Array.from(tokenRegistry.entries()).map(([id, amt]) =>
-            `${id.substring(0, 8)}... (${amt.toString()})`
-        ));
 
-        // Build outputs
+        // 5. Build outputs - FIXED: Using correct ErgoTree exactly like donaciones.html
         const outputs = [];
 
-        // Get ErgoTree for donation address
-        const donationErgoTree = await ergoApi.get_utxos_by_address(DONATION_ADDRESS)
-            .then(() => "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d")
-            .catch(() => "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d"); // Fallback ErgoTree
-
         // Output 1: Donation (ERG only, NO tokens)
+        // FIXED: Use the exact same ErgoTree as donaciones.html
         outputs.push({
             value: donationNanoERGs.toString(),
-            ergoTree: donationErgoTree, // Correct ErgoTree for donation address
+            ergoTree: "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d", // Fixed ErgoTree
             assets: [], // CRITICAL: No tokens in donation!
             additionalRegisters: {},
             creationHeight: currentHeight
@@ -320,11 +292,11 @@ async function makeDonation() {
 
         console.log('✅ Donation output created: ERG only, no tokens');
 
-        // Output 2: Change (remaining ERG + ALL tokens)
+        // Output 2: Change (remaining ERG + ALL tokens) - SAME LOGIC AS donaciones.html
         const changeValue = totalInputValue - donationNanoERGs - feeNanoERGs;
 
         if (changeValue > 0n || tokenRegistry.size > 0) {
-            // CRITICAL: Use ErgoTree from first input to ensure tokens return correctly
+            // CRITICAL: Use ErgoTree from first input - SAME AS donaciones.html
             const changeErgoTree = selectedUtxos[0].ergoTree;
 
             // Convert token registry to output format
@@ -350,7 +322,7 @@ async function makeDonation() {
             console.log('  - ErgoTree match:', changeErgoTree === selectedUtxos[0].ergoTree ? 'YES' : 'NO');
         }
 
-        // Build final transaction
+        // 6. Build final transaction - SAME AS donaciones.html
         const unsignedTransaction = {
             inputs: selectedUtxos,
             outputs: outputs,
@@ -364,12 +336,12 @@ async function makeDonation() {
 
         showStatus('donationStatus', `🛡️ Transaction ready - ${tokenRegistry.size} token types preserved. Please confirm in Nautilus.`, 'info');
 
-        // Sign transaction
+        // 7. Sign transaction
         console.log('✍️ Requesting signature...');
         const signedTransaction = await ergoApi.sign_tx(unsignedTransaction);
         console.log('✅ Transaction signed successfully');
 
-        // Submit transaction
+        // 8. Submit transaction
         showStatus('donationStatus', '📡 Submitting transaction to blockchain...', 'info');
         const txId = await ergoApi.submit_tx(signedTransaction);
 
@@ -398,7 +370,7 @@ async function makeDonation() {
     }
 }
 
-// Utility function to show status messages (if not already defined)
+// Utility function to show status messages
 function showStatus(elementId, message, type = 'info') {
     const statusElement = document.getElementById(elementId);
     if (statusElement) {
@@ -415,7 +387,7 @@ function showStatus(elementId, message, type = 'info') {
     }
 }
 
-// Utility function to get translations (fallback if not available)
+// FIXED: Utility function to get translations
 function getTranslation(key) {
     // Verificar si las traducciones están disponibles
     if (typeof window === 'undefined' || !window.translations) {
@@ -425,7 +397,7 @@ function getTranslation(key) {
 
     // Obtener idioma actual
     const currentLang = localStorage.getItem('scypher-lang') || 'en';
-
+    
     // Verificar si el idioma existe
     if (!window.translations[currentLang]) {
         console.warn('⚠️ Language not found:', currentLang, 'using English');
