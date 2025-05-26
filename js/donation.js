@@ -309,18 +309,12 @@ async function buildDonationTransaction(amount) {
             throw new Error('CRITICAL: Donation and sender addresses are the same!');
         }
 
-        // Calculate total needed para inputs
-        const totalNeeded = amountNanoErg + RECOMMENDED_MIN_FEE;
-        console.log('📊 Total needed from inputs:', Number(totalNeeded) / 1000000000, 'ERG');
+        // Calculate total needed para inputs (SIN incluir fee aquí)
+        const totalNeeded = amountNanoErg; // Solo la donación
+        console.log('📊 Amount needed for donation:', Number(totalNeeded) / 1000000000, 'ERG');
+        console.log('📊 Fee will be handled implicitly by Ergo network:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
 
-        // Select inputs (Fleet SDK BoxSelector logic)
-        let selectedInputs = [];
-        let totalInputValue = 0n;
-        const allTokens = new Map();
-
-        // Ordenar UTXOs por valor (estrategia Fleet SDK)
-        const sortedUtxos = [...utxos].sort((a, b) => Number(BigInt(b.value) - BigInt(a.value)));
-
+        // Select inputs to cover donation + fee + change
         for (const utxo of sortedUtxos) {
             selectedInputs.push(utxo);
             totalInputValue += BigInt(utxo.value);
@@ -333,11 +327,12 @@ async function buildDonationTransaction(amount) {
                 });
             }
 
-            if (totalInputValue >= totalNeeded) break;
+            // Necesitamos cubrir: donación + fee mínimo
+            if (totalInputValue >= (amountNanoErg + RECOMMENDED_MIN_FEE)) break;
         }
 
-        if (totalInputValue < totalNeeded) {
-            throw new Error(`Insufficient funds. Need ${Number(totalNeeded) / 1000000000} ERG but only have ${Number(totalInputValue) / 1000000000} ERG`);
+        if (totalInputValue < (amountNanoErg + RECOMMENDED_MIN_FEE)) {
+            throw new Error(`Insufficient funds. Need ${Number(amountNanoErg + RECOMMENDED_MIN_FEE) / 1000000000} ERG but only have ${Number(totalInputValue) / 1000000000} ERG`);
         }
 
         console.log('📥 INPUTS SELECTED:');
@@ -364,9 +359,15 @@ async function buildDonationTransaction(amount) {
         console.log('  - To address:', DONATION_ADDRESS);
         console.log('  - ErgoTree:', donationErgoTree);
 
-        // OUTPUT 2: Change + Fee incluido (patrón correcto Ergo)
-        // En Ergo, el fee NO es un output separado, se deduce automáticamente
-        const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE;
+        // OUTPUT 2: Change (SIN deducir fee aquí - Ergo lo maneja automáticamente)
+        // En Ergo, el fee se deduce automáticamente del total
+        const changeValue = totalInputValue - amountNanoErg; // Sin deducir fee manualmente
+        
+        console.log('🔍 BALANCE CALCULATION:');
+        console.log('  - Total inputs:', Number(totalInputValue) / 1000000000, 'ERG');
+        console.log('  - Donation output:', Number(amountNanoErg) / 1000000000, 'ERG');
+        console.log('  - Change calculated:', Number(changeValue) / 1000000000, 'ERG');
+        console.log('  - Fee (handled by Ergo):', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
         
         if (changeValue > 0n || allTokens.size > 0) {
             // Convert tokens for change output
@@ -391,10 +392,9 @@ async function buildDonationTransaction(amount) {
             };
             outputs.push(changeOutput);
 
-            console.log('✅ OUTPUT 2 - CHANGE (with fee deducted):');
+            console.log('✅ OUTPUT 2 - CHANGE:');
             console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
             console.log('  - Tokens returned:', changeTokens.length);
-            console.log('  - Fee deducted:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
             console.log('  - Back to sender ErgoTree:', senderErgoTree);
 
             if (changeTokens.length > 0) {
@@ -404,7 +404,7 @@ async function buildDonationTransaction(amount) {
                 });
             }
         } else {
-            console.log('ℹ️  No change output needed (exact amount + fee)');
+            console.log('ℹ️  No change output needed');
         }
 
         // Build final transaction (Fleet SDK .build())
@@ -417,18 +417,27 @@ async function buildDonationTransaction(amount) {
         console.log('📝 FINAL TRANSACTION (Ergo Standard):');
         console.log('════════════════════════════════════════');
         console.log('📥 INPUTS:', transaction.inputs.length, 'UTXOs');
+        console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
         console.log('📤 OUTPUTS:', transaction.outputs.length, 'outputs');
+        
+        let totalOutputValue = 0n;
         transaction.outputs.forEach((output, index) => {
             const ergAmount = Number(BigInt(output.value)) / 1000000000;
+            totalOutputValue += BigInt(output.value);
             if (index === 0) {
                 console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
             } else {
                 console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → (back to you)`);
             }
         });
-        console.log('💰 FEE HANDLING:');
-        console.log(`  - Fee: ${Number(RECOMMENDED_MIN_FEE) / 1000000000} ERG (deducted from inputs)`);
-        console.log('  - Fee is NOT a separate output in Ergo');
+        
+        console.log('  - Total output value:', Number(totalOutputValue) / 1000000000, 'ERG');
+        
+        const implicitFee = totalInputValue - totalOutputValue;
+        console.log('💰 FEE VERIFICATION:');
+        console.log(`  - Implicit fee: ${Number(implicitFee) / 1000000000} ERG`);
+        console.log(`  - Expected fee: ${Number(RECOMMENDED_MIN_FEE) / 1000000000} ERG`);
+        console.log(`  - Fee correct: ${implicitFee === RECOMMENDED_MIN_FEE ? '✅ YES' : '❌ NO'}`);
         console.log('════════════════════════════════════════');
 
         return {
