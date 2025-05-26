@@ -64,6 +64,7 @@ const translations = {
             tokenSafe: "Token-Safe Donations",
             info: "Our donation system automatically preserves all tokens in your UTXOs. Your NFTs and tokens are completely safe.",
             detecting: "Detecting Nautilus Wallet...",
+            walletReady: "Nautilus Wallet detected - Ready to connect",
             selectAmount: "Select donation amount (ERG):",
             address: "Donation Address:",
             connectBtn: "Connect Nautilus Wallet",
@@ -145,6 +146,7 @@ const translations = {
             tokenSafe: "Donaciones Seguras para Tokens",
             info: "Nuestro sistema de donaciones preserva automáticamente todos los tokens en tus UTXOs. Tus NFTs y tokens están completamente seguros.",
             detecting: "Detectando Nautilus Wallet...",
+            walletReady: "Nautilus Wallet detectada - Lista para conectar",
             selectAmount: "Selecciona el monto de donación (ERG):",
             address: "Dirección de Donación:",
             connectBtn: "Conectar Nautilus Wallet",
@@ -226,6 +228,7 @@ const translations = {
             tokenSafe: "代币安全捐赠",
             info: "我们的捐赠系统会自动保留您 UTXO 中的所有代币。您的 NFT 和代币完全安全。",
             detecting: "正在检测 Nautilus 钱包...",
+            walletReady: "检测到 Nautilus 钱包 - 准备连接",
             selectAmount: "选择捐赠金额 (ERG)：",
             address: "捐赠地址：",
             connectBtn: "连接 Nautilus 钱包",
@@ -307,6 +310,7 @@ const translations = {
             tokenSafe: "Token-sichere Spenden",
             info: "Unser Spendensystem bewahrt automatisch alle Token in Ihren UTXOs auf. Ihre NFTs und Token sind vollkommen sicher.",
             detecting: "Erkenne Nautilus Wallet...",
+            walletReady: "Nautilus Wallet erkannt - Bereit zur Verbindung",
             selectAmount: "Spendenbetrag auswählen (ERG):",
             address: "Spendenadresse:",
             connectBtn: "Nautilus Wallet verbinden",
@@ -388,6 +392,7 @@ const translations = {
             tokenSafe: "Безопасные для токенов пожертвования",
             info: "Наша система пожертвований автоматически сохраняет все токены в ваших UTXO. Ваши NFT и токены полностью безопасны.",
             detecting: "Обнаружение кошелька Nautilus...",
+            walletReady: "Кошелек Nautilus обнаружен - Готов к подключению",
             selectAmount: "Выберите сумму пожертвования (ERG):",
             address: "Адрес для пожертвований:",
             connectBtn: "Подключить кошелек Nautilus",
@@ -407,3 +412,34 @@ const translations = {
         }
     }
 };
+
+// Make translations available globally
+if (typeof window !== 'undefined') {
+    window.translations = translations;
+
+    // Global function to get translations
+    window.getTranslation = function(keyPath) {
+        const currentLang = localStorage.getItem('scypher-lang') || 'en';
+        const keys = keyPath.split('.');
+        let value = translations[currentLang];
+
+        for (const key of keys) {
+            if (value && value[key]) {
+                value = value[key];
+            } else {
+                // Fallback to English
+                value = translations.en;
+                for (const k of keys) {
+                    if (value && value[k]) {
+                        value = value[k];
+                    } else {
+                        return keyPath; // Return key if translation not found
+                    }
+                }
+                break;
+            }
+        }
+
+        return value;
+    };
+}
