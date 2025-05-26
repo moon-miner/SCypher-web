@@ -367,15 +367,15 @@ async function buildDonationTransaction(amount) {
         console.log('  - To address:', DONATION_ADDRESS);
         console.log('  - ErgoTree:', donationErgoTree);
 
-        // OUTPUT 2: Change (DEDUCIENDO fee explícitamente)
-        // El fee debe ser la diferencia exacta entre inputs y outputs
-        const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE; // Deducir fee explícitamente
+        // OUTPUT 2: Change (SIN fee - Inputs deben = Outputs exactamente)
+        // En Ergo, Inputs DEBE IGUALAR Outputs exactamente
+        const changeValue = totalInputValue - amountNanoErg; // SIN deducir fee
         
-        console.log('🔍 BALANCE CALCULATION:');
+        console.log('🔍 BALANCE CALCULATION (Ergo Rule: Inputs = Outputs):');
         console.log('  - Total inputs:', Number(totalInputValue) / 1000000000, 'ERG');
         console.log('  - Donation output:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Fee deducted:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
-        console.log('  - Change remaining:', Number(changeValue) / 1000000000, 'ERG');
+        console.log('  - Change output:', Number(changeValue) / 1000000000, 'ERG');
+        console.log('  - Inputs = Outputs?', Number(totalInputValue) === Number(amountNanoErg + changeValue) ? '✅ YES' : '❌ NO');
         
         if (changeValue > 0n || allTokens.size > 0) {
             // Convert tokens for change output
@@ -444,11 +444,17 @@ async function buildDonationTransaction(amount) {
         
         console.log('  - Total output value:', Number(totalOutputValue) / 1000000000, 'ERG');
         
-        const implicitFee = totalInputValue - totalOutputValue;
-        console.log('💰 FEE VERIFICATION:');
-        console.log(`  - Implicit fee: ${Number(implicitFee) / 1000000000} ERG`);
-        console.log(`  - Expected fee: ${Number(RECOMMENDED_MIN_FEE) / 1000000000} ERG`);
-        console.log(`  - Fee correct: ${implicitFee === RECOMMENDED_MIN_FEE ? '✅ YES' : '❌ NO'}`);
+        console.log('💰 BALANCE VERIFICATION (Ergo Rule):');
+        console.log(`  - Total inputs: ${Number(totalInputValue) / 1000000000} ERG`);
+        console.log(`  - Total outputs: ${Number(totalOutputValue) / 1000000000} ERG`);
+        console.log(`  - Difference: ${Number(totalInputValue - totalOutputValue) / 1000000000} ERG`);
+        console.log(`  - Inputs = Outputs: ${totalInputValue === totalOutputValue ? '✅ YES (transaction valid)' : '❌ NO (transaction invalid)'}`);
+        
+        if (totalInputValue !== totalOutputValue) {
+            console.error('🚨 CRITICAL: Inputs ≠ Outputs. This transaction will be rejected by Ergo.');
+            console.error('🚨 In Ergo, Inputs MUST EQUAL Outputs exactly. No implicit fees.');
+        }
+        
         console.log('════════════════════════════════════════');
 
         return {
