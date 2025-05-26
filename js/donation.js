@@ -1,4 +1,4 @@
-// donation.js - FINAL VERSION with correct ErgoTree conversion
+// donation.js - VERSIÓN CORREGIDA con Fleet-SDK
 
 // Configuration
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
@@ -19,10 +19,37 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeDonation() {
     console.log('🚀 Initializing donation system...');
     console.log('💰 Donation address:', DONATION_ADDRESS);
+
+    // Cargar Fleet-SDK primero
+    await loadFleetSDK();
     
     setupAmountSelection();
     setupWalletConnection();
     await checkNautilusAvailability();
+}
+
+// Cargar Fleet-SDK desde CDN
+async function loadFleetSDK() {
+    return new Promise((resolve, reject) => {
+        if (typeof window.FleetSDK !== 'undefined') {
+            console.log('✅ Fleet-SDK already loaded');
+            resolve();
+            return;
+        }
+
+        console.log('📦 Loading Fleet-SDK...');
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/@fleet-sdk/core@latest/dist/index.umd.js';
+        script.onload = () => {
+            console.log('✅ Fleet-SDK loaded successfully');
+            resolve();
+        };
+        script.onerror = (error) => {
+            console.error('❌ Failed to load Fleet-SDK:', error);
+            reject(error);
+        };
+        document.head.appendChild(script);
+    });
 }
 
 // Setup amount selection buttons
@@ -82,7 +109,7 @@ async function checkNautilusAvailability() {
 
         const checkNautilus = () => {
             attempts++;
-            
+
             if (attempts % 10 === 0) {
                 console.log(`🔄 Attempt ${attempts}: Checking for ergoConnector...`);
             }
@@ -198,47 +225,99 @@ async function connectWallet() {
     }
 }
 
-// CRITICAL: Convert address to ErgoTree
+// CORRECCIÓN PRINCIPAL: Convertir dirección a ErgoTree usando Fleet-SDK
 function addressToErgoTree(address) {
-    console.log('🔄 Converting address to ErgoTree:', address);
-    
-    // Method 1: Try Fleet-SDK if available
-    if (typeof window.FleetSDK !== 'undefined' && window.FleetSDK.Address) {
-        try {
-            const addr = window.FleetSDK.Address.fromBase58(address);
-            const ergoTree = addr.ergoTree;
-            console.log('✅ Fleet-SDK conversion successful:', ergoTree);
-            return ergoTree;
-        } catch (error) {
-            console.warn('⚠️ Fleet-SDK conversion failed:', error.message);
-        }
-    }
-    
-    // Method 2: Manual conversion for P2PK addresses
-    // The address 9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY is a P2PK address
-    // We need to extract the public key and create the ErgoTree
-    
+    console.log('🔄 Converting address to ErgoTree using Fleet-SDK:', address);
+
     try {
-        // This is a simplified conversion - in production you'd use proper base58 decoding
-        // For now, let's use a known working ErgoTree for P2PK addresses
+        if (typeof window.FleetSDK === 'undefined') {
+            throw new Error('Fleet-SDK not loaded');
+        }
+
+        // Usar Fleet-SDK para convertir la dirección
+        const addr = window.FleetSDK.Address.fromBase58(address);
+        const ergoTree = addr.ergoTree;
         
-        // Extract the public key part from the address (this is simplified)
-        // In a real implementation, you'd decode the base58, extract the public key, and build the ErgoTree
+        console.log('✅ Fleet-SDK conversion successful');
+        console.log('  - Address:', address);
+        console.log('  - ErgoTree:', ergoTree);
         
-        // For the address 9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY
-        // This should be the correct ErgoTree (P2PK format)
-        const ergoTree = "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
-        
-        console.log('🔧 Using manual P2PK ErgoTree:', ergoTree);
         return ergoTree;
-        
+
     } catch (error) {
-        console.error('❌ Manual conversion failed:', error);
-        throw new Error('Cannot convert address to ErgoTree: ' + error.message);
+        console.error('❌ Fleet-SDK conversion failed:', error);
+        
+        // Fallback manual para direcciones P2PK
+        console.log('🔧 Attempting manual P2PK conversion...');
+        
+        try {
+            // Para la dirección 9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY
+            // Decodificar base58 y extraer la clave pública
+            const decoded = base58Decode(address);
+            
+            // Verificar que es una dirección P2PK (empieza con 0x01)
+            if (decoded[0] !== 0x01) {
+                throw new Error('Not a P2PK address');
+            }
+            
+            // Extraer la clave pública (bytes 1-33)
+            const publicKey = decoded.slice(1, 34);
+            const publicKeyHex = Array.from(publicKey, byte => 
+                byte.toString(16).padStart(2, '0')
+            ).join('');
+            
+            // Construir ErgoTree para P2PK
+            const ergoTree = `0008cd${publicKeyHex}`;
+            
+            console.log('✅ Manual P2PK conversion successful');
+            console.log('  - Public Key:', publicKeyHex);
+            console.log('  - ErgoTree:', ergoTree);
+            
+            return ergoTree;
+            
+        } catch (manualError) {
+            console.error('❌ Manual conversion also failed:', manualError);
+            throw new Error(`Cannot convert address to ErgoTree: ${error.message}`);
+        }
     }
 }
 
-// Make donation with correct ErgoTree
+// Función auxiliar para decodificar base58
+function base58Decode(str) {
+    const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const BASE = 58;
+    
+    let decoded = [];
+    let multi = 1;
+    let s = str;
+    
+    while (s.length > 0) {
+        const digit = ALPHABET.indexOf(s[s.length - 1]);
+        if (digit < 0) throw new Error('Invalid base58 character');
+        
+        let carry = digit * multi;
+        let i = 0;
+        while (carry > 0 || i < decoded.length) {
+            if (i >= decoded.length) decoded.push(0);
+            carry += decoded[i];
+            decoded[i] = carry % 256;
+            carry = Math.floor(carry / 256);
+            i++;
+        }
+        
+        multi *= BASE;
+        s = s.slice(0, -1);
+    }
+    
+    // Manejar ceros iniciales
+    for (let i = 0; i < str.length && str[i] === '1'; i++) {
+        decoded.push(0);
+    }
+    
+    return new Uint8Array(decoded.reverse());
+}
+
+// CORRECCIÓN PRINCIPAL: Make donation con ErgoTree correcto
 async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
         showStatus('donationStatus', 'Please connect your wallet first', 'error');
@@ -260,7 +339,7 @@ async function makeDonation() {
     const originalText = donateBtn.innerHTML;
 
     try {
-        console.log('🚀 === STARTING DONATION WITH CORRECT ADDRESS ===');
+        console.log('🚀 === STARTING DONATION WITH FLEET-SDK ===');
         console.log('💰 Donation amount:', amount, 'ERG');
         console.log('🎯 Target address:', DONATION_ADDRESS);
 
@@ -283,7 +362,7 @@ async function makeDonation() {
         const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
         const minFee = 1000000n; // 0.001 ERG
         const totalNeeded = amountNanoErg + minFee;
-        
+
         console.log('💰 Transaction amounts:');
         console.log('  - Donation:', Number(amountNanoErg) / 1000000000, 'ERG');
         console.log('  - Fee:', Number(minFee) / 1000000000, 'ERG');
@@ -293,11 +372,11 @@ async function makeDonation() {
         let selectedUtxos = [];
         let totalValue = 0n;
         const allTokens = new Map();
-        
+
         for (const utxo of utxos) {
             selectedUtxos.push(utxo);
             totalValue += BigInt(utxo.value);
-            
+
             // Collect tokens
             if (utxo.assets && utxo.assets.length > 0) {
                 utxo.assets.forEach(token => {
@@ -305,66 +384,85 @@ async function makeDonation() {
                     allTokens.set(token.tokenId, existing + BigInt(token.amount));
                 });
             }
-            
+
             if (totalValue >= totalNeeded) break;
         }
-        
+
         if (totalValue < totalNeeded) {
             throw new Error(`Insufficient funds. Need ${Number(totalNeeded) / 1000000000} ERG but only have ${Number(totalValue) / 1000000000} ERG`);
         }
-        
+
         console.log('💼 Input analysis:');
         console.log('  - Selected UTXOs:', selectedUtxos.length);
         console.log('  - Total input:', Number(totalValue) / 1000000000, 'ERG');
         console.log('  - Tokens found:', allTokens.size);
 
-        // CRITICAL: Get correct ErgoTree for donation address
+        // CRÍTICO: Obtener ErgoTree correcto para la dirección de donación
         const donationErgoTree = addressToErgoTree(DONATION_ADDRESS);
         console.log('🎯 Donation ErgoTree:', donationErgoTree);
 
+        // Obtener ErgoTree del sender (para el cambio)
+        const senderErgoTree = selectedUtxos[0].ergoTree;
+        console.log('👤 Sender ErgoTree:', senderErgoTree);
+
+        // Verificar que los ErgoTrees sean diferentes
+        if (donationErgoTree === senderErgoTree) {
+            throw new Error('CRITICAL ERROR: Donation and sender ErgoTrees are the same! This would send funds back to sender.');
+        }
+
         // Build outputs
         const outputs = [];
-        
-        // Output 1: Donation - CORRECT ErgoTree for target address
+
+        // Output 1: Donation - ErgoTree correcto para la dirección de destino
         outputs.push({
             value: amountNanoErg.toString(),
-            ergoTree: donationErgoTree, // CORRECT ErgoTree for donation address
-            assets: [], // No tokens in donation
+            ergoTree: donationErgoTree, // ErgoTree de la dirección de donación
+            assets: [], // Sin tokens en la donación
             additionalRegisters: {},
             creationHeight: currentHeight
         });
-        
+
         console.log('✅ Donation output created:');
         console.log('  - Amount:', Number(amountNanoErg) / 1000000000, 'ERG');
+        console.log('  - Target Address:', DONATION_ADDRESS);
         console.log('  - Target ErgoTree:', donationErgoTree);
         console.log('  - Assets: none (pure ERG donation)');
 
-        // Output 2: Change - remaining ERG + all tokens back to sender
+        // Output 2: Change - ERG restante + todos los tokens de vuelta al sender
         const changeValue = totalValue - amountNanoErg - minFee;
-        
+
         if (changeValue > 0n || allTokens.size > 0) {
-            // Use ErgoTree from first selected UTXO (sender's address)
-            const changeErgoTree = selectedUtxos[0].ergoTree;
-            
             const changeTokens = Array.from(allTokens.entries()).map(([tokenId, amount]) => ({
                 tokenId,
                 amount: amount.toString()
             }));
-            
-            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Min 0.001 ERG for token box
-            
+
+            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Min 0.001 ERG para caja con tokens
+
             outputs.push({
                 value: finalChangeValue.toString(),
-                ergoTree: changeErgoTree, // Sender's ErgoTree for change
-                assets: changeTokens, // All tokens back to sender
+                ergoTree: senderErgoTree, // ErgoTree del sender para el cambio
+                assets: changeTokens, // Todos los tokens de vuelta al sender
                 additionalRegisters: {},
                 creationHeight: currentHeight
             });
-            
+
             console.log('✅ Change output created:');
             console.log('  - ERG returned:', Number(finalChangeValue) / 1000000000);
             console.log('  - Tokens returned:', changeTokens.length);
-            console.log('  - Change ErgoTree:', changeErgoTree);
+            console.log('  - Change ErgoTree:', senderErgoTree);
+        }
+
+        // Verificación final
+        console.log('🔍 FINAL VERIFICATION:');
+        console.log('  - Donation goes to:', DONATION_ADDRESS);
+        console.log('  - Donation ErgoTree:', donationErgoTree);
+        console.log('  - Change goes back to sender');
+        console.log('  - Sender ErgoTree:', senderErgoTree);
+        console.log('  - ErgoTrees are different:', donationErgoTree !== senderErgoTree ? '✅ YES' : '❌ NO - ERROR!');
+
+        if (donationErgoTree === senderErgoTree) {
+            throw new Error('CRITICAL: ErgoTrees are the same - donation would go back to sender!');
         }
 
         // Build final transaction
@@ -373,7 +471,7 @@ async function makeDonation() {
             outputs: outputs,
             dataInputs: []
         };
-        
+
         console.log('📝 Final transaction:');
         console.log('  - Inputs:', transaction.inputs.length);
         console.log('  - Outputs:', transaction.outputs.length);
@@ -397,8 +495,8 @@ async function makeDonation() {
         console.log('  - Recipient:', DONATION_ADDRESS);
         console.log('  - Tokens preserved:', allTokens.size);
 
-        showStatus('donationStatus', 
-            `🎉 Donation successful! ${amount} ERG sent to ${DONATION_ADDRESS.substring(0, 10)}...${DONATION_ADDRESS.substring(DONATION_ADDRESS.length - 10)}. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`, 
+        showStatus('donationStatus',
+            `🎉 Donation successful! ${amount} ERG sent to ${DONATION_ADDRESS.substring(0, 10)}...${DONATION_ADDRESS.substring(DONATION_ADDRESS.length - 10)}. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`,
             'success'
         );
 
