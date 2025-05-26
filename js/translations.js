@@ -1,4 +1,4 @@
-// translations.js - Multi-language support for Scypher
+// translations.js - Multi-language support for Scypher (Updated with new download messages)
 
 const translations = {
     en: {
@@ -43,15 +43,30 @@ const translations = {
             subtitle: "Retrieve the cipher script directly from Ergo blockchain",
             blockchain: {
                 title: "Download from Blockchain",
-                desc: "Click below to fetch the script fragments from Ergo blockchain and reconstruct the original scypher.sh file",
+                desc: "Click below to fetch the script fragments from Ergo blockchain and reconstruct the original scypher.sh.xz file",
                 button: "Fetch from Blockchain"
             },
             info: {
                 title: "What happens when you download?",
                 step1: "Fetches token data from Ergo blockchain API",
                 step2: "Combines base64 encoded fragments",
-                step3: "Decodes and decompresses the data",
-                step4: "Delivers the original scypher.sh script"
+                step3: "Reconstructs the compressed XZ archive",
+                step4: "Delivers the original scypher.sh.xz file"
+            },
+            progress: {
+                connecting: "Connecting to Ergo blockchain...",
+                initializing: "Initializing decentralized download...",
+                fetching: "Fetching script fragments from blockchain...",
+                fragment: "Downloading fragment {current} of {total} from blockchain...",
+                combining: "Combining base64 fragments...",
+                reconstructing: "Reconstructing XZ archive...",
+                preparing: "Preparing download...",
+                success: "✅ Successfully downloaded scypher.sh.xz from blockchain!",
+                completed: "Download Completed",
+                error: "Download failed",
+                fetchError: "Failed to fetch fragment",
+                noDescription: "Fragment has no description field",
+                fragmentFailed: "Fragment download failed"
             },
             github: {
                 scypher: "Scypher Repository",
@@ -125,15 +140,30 @@ const translations = {
             subtitle: "Recupera el script cifrador directamente desde la blockchain de Ergo",
             blockchain: {
                 title: "Descargar desde Blockchain",
-                desc: "Haz clic abajo para obtener los fragmentos del script desde la blockchain de Ergo y reconstruir el archivo scypher.sh original",
+                desc: "Haz clic abajo para obtener los fragmentos del script desde la blockchain de Ergo y reconstruir el archivo scypher.sh.xz original",
                 button: "Obtener desde Blockchain"
             },
             info: {
                 title: "¿Qué sucede cuando descargas?",
                 step1: "Obtiene datos de tokens desde la API de blockchain de Ergo",
                 step2: "Combina fragmentos codificados en base64",
-                step3: "Decodifica y descomprime los datos",
-                step4: "Entrega el script scypher.sh original"
+                step3: "Reconstruye el archivo comprimido XZ",
+                step4: "Entrega el archivo scypher.sh.xz original"
+            },
+            progress: {
+                connecting: "Conectando a la blockchain de Ergo...",
+                initializing: "Inicializando descarga descentralizada...",
+                fetching: "Obteniendo fragmentos del script desde la blockchain...",
+                fragment: "Descargando fragmento {current} de {total} desde blockchain...",
+                combining: "Combinando fragmentos base64...",
+                reconstructing: "Reconstruyendo archivo XZ...",
+                preparing: "Preparando descarga...",
+                success: "✅ ¡scypher.sh.xz descargado exitosamente desde blockchain!",
+                completed: "Descarga Completada",
+                error: "Error en la descarga",
+                fetchError: "Error al descargar fragmento",
+                noDescription: "El fragmento no tiene campo de descripción",
+                fragmentFailed: "Falló la descarga del fragmento"
             },
             github: {
                 scypher: "Repositorio Scypher",
@@ -207,15 +237,30 @@ const translations = {
             subtitle: "直接从 Ergo 区块链检索密码脚本",
             blockchain: {
                 title: "从区块链下载",
-                desc: "点击下方从 Ergo 区块链获取脚本片段并重建原始 scypher.sh 文件",
+                desc: "点击下方从 Ergo 区块链获取脚本片段并重建原始 scypher.sh.xz 文件",
                 button: "从区块链获取"
             },
             info: {
                 title: "下载时会发生什么？",
                 step1: "从 Ergo 区块链 API 获取代币数据",
                 step2: "组合 base64 编码的片段",
-                step3: "解码并解压缩数据",
-                step4: "交付原始 scypher.sh 脚本"
+                step3: "重建压缩的 XZ 存档",
+                step4: "交付原始 scypher.sh.xz 文件"
+            },
+            progress: {
+                connecting: "连接到 Ergo 区块链...",
+                initializing: "初始化去中心化下载...",
+                fetching: "从区块链获取脚本片段...",
+                fragment: "从区块链下载片段 {current}/{total}...",
+                combining: "组合 base64 片段...",
+                reconstructing: "重建 XZ 存档...",
+                preparing: "准备下载...",
+                success: "✅ 成功从区块链下载 scypher.sh.xz！",
+                completed: "下载完成",
+                error: "下载失败",
+                fetchError: "获取片段失败",
+                noDescription: "片段没有描述字段",
+                fragmentFailed: "片段下载失败"
             },
             github: {
                 scypher: "Scypher 仓库",
@@ -289,15 +334,30 @@ const translations = {
             subtitle: "Rufen Sie das Verschlüsselungsskript direkt von der Ergo-Blockchain ab",
             blockchain: {
                 title: "Von Blockchain herunterladen",
-                desc: "Klicken Sie unten, um die Skriptfragmente von der Ergo-Blockchain abzurufen und die ursprüngliche scypher.sh-Datei zu rekonstruieren",
+                desc: "Klicken Sie unten, um die Skriptfragmente von der Ergo-Blockchain abzurufen und die ursprüngliche scypher.sh.xz-Datei zu rekonstruieren",
                 button: "Von Blockchain abrufen"
             },
             info: {
                 title: "Was passiert beim Download?",
                 step1: "Ruft Token-Daten von der Ergo-Blockchain-API ab",
                 step2: "Kombiniert base64-codierte Fragmente",
-                step3: "Dekodiert und dekomprimiert die Daten",
-                step4: "Liefert das ursprüngliche scypher.sh-Skript"
+                step3: "Rekonstruiert das komprimierte XZ-Archiv",
+                step4: "Liefert die ursprüngliche scypher.sh.xz-Datei"
+            },
+            progress: {
+                connecting: "Verbindung zur Ergo-Blockchain...",
+                initializing: "Dezentraler Download wird initialisiert...",
+                fetching: "Skriptfragmente von der Blockchain abrufen...",
+                fragment: "Fragment {current} von {total} von der Blockchain herunterladen...",
+                combining: "Base64-Fragmente kombinieren...",
+                reconstructing: "XZ-Archiv rekonstruieren...",
+                preparing: "Download vorbereiten...",
+                success: "✅ scypher.sh.xz erfolgreich von der Blockchain heruntergeladen!",
+                completed: "Download abgeschlossen",
+                error: "Download fehlgeschlagen",
+                fetchError: "Fragment konnte nicht abgerufen werden",
+                noDescription: "Fragment hat kein Beschreibungsfeld",
+                fragmentFailed: "Fragment-Download fehlgeschlagen"
             },
             github: {
                 scypher: "Scypher-Repository",
@@ -371,15 +431,30 @@ const translations = {
             subtitle: "Получите скрипт шифратора напрямую из блокчейна Ergo",
             blockchain: {
                 title: "Скачать из блокчейна",
-                desc: "Нажмите ниже, чтобы получить фрагменты скрипта из блокчейна Ergo и восстановить исходный файл scypher.sh",
+                desc: "Нажмите ниже, чтобы получить фрагменты скрипта из блокчейна Ergo и восстановить исходный файл scypher.sh.xz",
                 button: "Получить из блокчейна"
             },
             info: {
                 title: "Что происходит при загрузке?",
                 step1: "Получает данные токенов из API блокчейна Ergo",
                 step2: "Объединяет фрагменты, закодированные в base64",
-                step3: "Декодирует и распаковывает данные",
-                step4: "Предоставляет исходный скрипт scypher.sh"
+                step3: "Восстанавливает сжатый XZ-архив",
+                step4: "Предоставляет исходный файл scypher.sh.xz"
+            },
+            progress: {
+                connecting: "Подключение к блокчейну Ergo...",
+                initializing: "Инициализация децентрализованной загрузки...",
+                fetching: "Получение фрагментов скрипта из блокчейна...",
+                fragment: "Загрузка фрагмента {current} из {total} из блокчейна...",
+                combining: "Объединение base64 фрагментов...",
+                reconstructing: "Восстановление XZ-архива...",
+                preparing: "Подготовка загрузки...",
+                success: "✅ scypher.sh.xz успешно загружен из блокчейна!",
+                completed: "Загрузка завершена",
+                error: "Ошибка загрузки",
+                fetchError: "Не удалось получить фрагмент",
+                noDescription: "У фрагмента нет поля описания",
+                fragmentFailed: "Загрузка фрагмента не удалась"
             },
             github: {
                 scypher: "Репозиторий Scypher",
