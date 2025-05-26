@@ -417,15 +417,55 @@ function showStatus(elementId, message, type = 'info') {
 
 // Utility function to get translations (fallback if not available)
 function getTranslation(key) {
-    // Try to get translation from the global translations object
-    if (typeof window.getTranslation === 'function') {
-        return window.getTranslation(key);
+    // Verificar si las traducciones están disponibles
+    if (typeof window === 'undefined' || !window.translations) {
+        console.warn('⚠️ Translations not available, using fallback for:', key);
+        return getFallbackTranslation(key);
     }
 
-    // Fallback for common keys
+    // Obtener idioma actual
+    const currentLang = localStorage.getItem('scypher-lang') || 'en';
+
+    // Verificar si el idioma existe
+    if (!window.translations[currentLang]) {
+        console.warn('⚠️ Language not found:', currentLang, 'using English');
+        return getTranslationForLang(key, 'en');
+    }
+
+    return getTranslationForLang(key, currentLang);
+}
+
+// Función auxiliar para obtener traducción de un idioma específico
+function getTranslationForLang(keyPath, lang) {
+    if (!window.translations || !window.translations[lang]) {
+        return getFallbackTranslation(keyPath);
+    }
+
+    const keys = keyPath.split('.');
+    let value = window.translations[lang];
+
+    for (const key of keys) {
+        if (value && typeof value === 'object' && value[key]) {
+            value = value[key];
+        } else {
+            // Si no se encuentra en el idioma actual, intentar en inglés
+            if (lang !== 'en' && window.translations.en) {
+                return getTranslationForLang(keyPath, 'en');
+            }
+            return getFallbackTranslation(keyPath);
+        }
+    }
+
+    return value || getFallbackTranslation(keyPath);
+}
+
+// Función de fallback para traducciones críticas
+function getFallbackTranslation(key) {
     const fallbacks = {
         'donate.walletReady': 'Nautilus Wallet detected - Ready to connect',
-        'donate.connectBtn': 'Connect Nautilus Wallet'
+        'donate.connectBtn': 'Connect Nautilus Wallet',
+        'donate.detecting': 'Detecting Nautilus Wallet...',
+        'donate.donateBtn': 'Make Secure Donation'
     };
 
     return fallbacks[key] || key;
