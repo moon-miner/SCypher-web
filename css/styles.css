@@ -813,7 +813,6 @@ a:hover {
     }
 }
 
-
 /* Download note styling */
 .download-note {
     margin-top: 2rem;
@@ -892,12 +891,12 @@ a:hover {
 
 /* Enhanced download status messages */
 .download-status.loading {
-    display: flex !important;
+    display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%) !important;
-    color: #1e40af !important;
-    border: 2px solid #93c5fd !important;
+    background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 2px solid #93c5fd;
     border-radius: 0.5rem;
     padding: 1rem;
     font-weight: 600;
@@ -914,9 +913,9 @@ a:hover {
 }
 
 .download-status.success {
-    background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%) !important;
-    color: #065f46 !important;
-    border: 2px solid #6ee7b7 !important;
+    background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 2px solid #6ee7b7;
     animation: success-glow 1s ease-out;
 }
 
@@ -936,9 +935,9 @@ a:hover {
 }
 
 .download-status.error {
-    background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%) !important;
-    color: #991b1b !important;
-    border: 2px solid #f87171 !important;
+    background: linear-gradient(90deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 2px solid #f87171;
     animation: error-shake 0.5s ease-in-out;
 }
 
@@ -950,7 +949,7 @@ a:hover {
 
 /* Enhanced button states during download */
 .btn.downloading {
-    background: linear-gradient(45deg, var(--accent-color), var(--secondary-color)) !important;
+    background: linear-gradient(45deg, var(--accent-color), var(--secondary-color));
     animation: button-progress 2s ease-in-out infinite;
     pointer-events: none;
 }
