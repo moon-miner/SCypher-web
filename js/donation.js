@@ -314,6 +314,14 @@ async function buildDonationTransaction(amount) {
         console.log('📊 Amount needed for donation:', Number(totalNeeded) / 1000000000, 'ERG');
         console.log('📊 Fee will be handled implicitly by Ergo network:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
 
+        // Select inputs (Fleet SDK BoxSelector logic)
+        let selectedInputs = [];
+        let totalInputValue = 0n;
+        const allTokens = new Map();
+
+        // Ordenar UTXOs por valor (estrategia Fleet SDK)
+        const sortedUtxos = [...utxos].sort((a, b) => Number(BigInt(b.value) - BigInt(a.value)));
+
         // Select inputs to cover donation + fee + change
         for (const utxo of sortedUtxos) {
             selectedInputs.push(utxo);
