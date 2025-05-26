@@ -743,20 +743,19 @@ a:hover {
     font-size: 0.875rem;
 }
 
-/* Loading spinner */
+/* Loading spinner - DESHABILITADO */
 .loading {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255,255,255,.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-    margin-right: 8px;
+    display: none !important;
+    animation: none !important;
 }
 
+.btn .loading {
+    display: none !important;
+}
+
+/* Eliminar animación spin */
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    /* vacío */
 }
 
 /* Donation status messages */
@@ -1052,38 +1051,38 @@ a:hover {
     .download-progress-container {
         padding: 1rem;
     }
-    
+
     .progress-info {
         gap: 0.75rem;
     }
-    
+
     .progress-text {
         font-size: 0.9rem;
     }
-    
+
     .progress-bar-container {
         height: 0.75rem;
         margin-bottom: 1rem;
     }
-    
+
     .progress-percentage {
         font-size: 0.625rem;
         right: 0.25rem;
     }
-    
+
     .progress-steps {
         gap: 0.5rem;
     }
-    
+
     .step-dot {
         width: 8px;
         height: 8px;
     }
-    
+
     .success-icon, .error-icon {
         font-size: 2rem;
     }
-    
+
     .download-success, .download-error {
         padding: 1.5rem;
     }
@@ -1092,16 +1091,16 @@ a:hover {
         margin: 1rem 0;
         padding: 1rem;
     }
-    
+
     .blockchain-transparency {
         margin: 2rem 0;
         padding: 1.5rem;
     }
-    
+
     .transparency-list {
         gap: 0.5rem;
     }
-    
+
     .transparency-list li {
         padding: 0.5rem;
         font-size: 0.9rem;
