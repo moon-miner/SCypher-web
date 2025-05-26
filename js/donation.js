@@ -1,8 +1,12 @@
-// donation.js - Token-safe donation functionality using Nautilus Wallet - CLEAN VERSION
+// donation.js - Token-safe donation functionality - FINAL CORRECTED VERSION
 
-// Configuration - UPDATED ADDRESS
+// Configuration - CORRECTED ADDRESS & ERGOTREE
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
 const NANOERGS_PER_ERG = 1000000000n;
+
+// CORRECTED: ErgoTree for the donation address (converted from donaciones.html working version)
+// This ErgoTree corresponds to a P2PK address and should work correctly
+const DONATION_ERGOTREE = "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
 
 // State
 let isWalletConnected = false;
@@ -18,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize all donation components
 async function initializeDonation() {
     console.log('🚀 Initializing donation system...');
+    console.log('💰 Donation address:', DONATION_ADDRESS);
+    console.log('🌳 ErgoTree:', DONATION_ERGOTREE);
     
     setupAmountSelection();
     setupWalletConnection();
@@ -37,7 +43,7 @@ function setupAmountSelection() {
             if (customAmount) {
                 customAmount.value = selectedAmount;
             }
-            console.log('Selected amount:', selectedAmount, 'ERG');
+            console.log('✅ Selected amount:', selectedAmount, 'ERG');
         });
     });
 
@@ -48,7 +54,7 @@ function setupAmountSelection() {
                 const btnAmount = parseFloat(btn.getAttribute('data-amount'));
                 btn.classList.toggle('active', btnAmount === selectedAmount);
             });
-            console.log('Custom amount:', selectedAmount, 'ERG');
+            console.log('✏️ Custom amount:', selectedAmount, 'ERG');
         });
     }
 }
@@ -81,7 +87,10 @@ async function checkNautilusAvailability() {
 
         const checkNautilus = () => {
             attempts++;
-            console.log(`Attempt ${attempts}: Checking for ergoConnector...`);
+            
+            if (attempts % 10 === 0) {
+                console.log(`🔄 Attempt ${attempts}: Checking for ergoConnector...`);
+            }
 
             if (typeof window.ergoConnector !== 'undefined' &&
                 window.ergoConnector &&
@@ -149,7 +158,7 @@ async function connectWallet() {
         }
 
         const connectionResult = await nautilusConnector.connect();
-        console.log('Connection result:', connectionResult);
+        console.log('📋 Connection result:', connectionResult);
 
         if (connectionResult === true) {
             ergoApi = window.ergo;
@@ -162,7 +171,7 @@ async function connectWallet() {
             const balance = await ergoApi.get_balance();
             const balanceERG = Number(BigInt(balance) / NANOERGS_PER_ERG);
 
-            console.log('Wallet balance:', balanceERG, 'ERG');
+            console.log('💰 Wallet balance:', balanceERG, 'ERG');
 
             isWalletConnected = true;
             const statusElement = document.getElementById('walletStatus');
@@ -194,7 +203,7 @@ async function connectWallet() {
     }
 }
 
-// Make token-safe donation - EXACT COPY FROM donaciones.html
+// CORRECTED: Make token-safe donation with proper validations
 async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
         showStatus('donationStatus', 'Please connect your wallet first', 'error');
@@ -207,12 +216,19 @@ async function makeDonation() {
         return;
     }
 
+    // Minimum donation check
+    if (amount < 0.001) {
+        showStatus('donationStatus', 'Minimum donation is 0.001 ERG', 'error');
+        return;
+    }
+
     const donateBtn = document.getElementById('donateBtn');
     const originalText = donateBtn.innerHTML;
 
     try {
         console.log('🚀 === STARTING TOKEN-SAFE DONATION ===');
         console.log('💰 Donation amount:', amount, 'ERG');
+        console.log('🎯 Donation address:', DONATION_ADDRESS);
 
         donateBtn.disabled = true;
         donateBtn.innerHTML = '<div class="loading"></div> Building secure transaction...';
@@ -220,22 +236,20 @@ async function makeDonation() {
 
         // 1. Get basic parameters
         const currentHeight = await ergoApi.get_current_height();
-        const changeAddress = await ergoApi.get_change_address();
-
         console.log('📊 Current height:', currentHeight);
-        console.log('🏠 Change address:', changeAddress);
 
-        // 2. Calculate amounts in nanoERGs
+        // 2. Calculate amounts in nanoERGs with proper precision
         const donationNanoERGs = BigInt(Math.floor(amount * 1000000000));
-        const feeNanoERGs = 1000000n; // 0.001 ERG
+        const feeNanoERGs = 1000000n; // 0.001 ERG standard fee
         const totalNeededNanoERGs = donationNanoERGs + feeNanoERGs;
 
-        console.log('💵 Amounts calculated:');
+        console.log('💵 Transaction amounts:');
         console.log('  - Donation:', donationNanoERGs.toString(), 'nanoERG');
         console.log('  - Fee:', feeNanoERGs.toString(), 'nanoERG');
         console.log('  - Total needed:', totalNeededNanoERGs.toString(), 'nanoERG');
+        console.log('  - Total needed (ERG):', Number(totalNeededNanoERGs) / 1000000000);
 
-        // 3. Get UTXOs that cover the needed amount
+        // 3. Get available UTXOs
         const availableUtxos = await ergoApi.get_utxos();
         if (!availableUtxos || availableUtxos.length === 0) {
             throw new Error('No UTXOs available in your wallet');
@@ -243,7 +257,7 @@ async function makeDonation() {
 
         console.log('📦 Available UTXOs:', availableUtxos.length);
 
-        // 4. Select UTXOs and collect tokens
+        // 4. Select UTXOs and collect tokens - EXACTLY like donaciones.html
         let selectedUtxos = [];
         let totalInputValue = 0n;
         const tokenRegistry = new Map(); // tokenId -> total amount
@@ -266,82 +280,119 @@ async function makeDonation() {
             }
         }
 
+        // CRITICAL: Validate sufficient funds
         if (totalInputValue < totalNeededNanoERGs) {
             const needed = Number(totalNeededNanoERGs) / 1000000000;
             const available = Number(totalInputValue) / 1000000000;
-            throw new Error(`Insufficient funds. Need ${needed} ERG but only have ${available} ERG available`);
+            throw new Error(`Insufficient funds. Need ${needed.toFixed(9)} ERG but only have ${available.toFixed(9)} ERG available`);
         }
 
         console.log('🔍 Input analysis:');
         console.log('  - UTXOs selected:', selectedUtxos.length);
-        console.log('  - Total ERG:', Number(totalInputValue) / 1000000000);
-        console.log('  - Token types:', tokenRegistry.size);
-        console.log('  - Token list:', Array.from(tokenRegistry.entries()).map(([id, amt]) =>
-            `${id.substring(0, 8)}... (${amt.toString()})`
-        ));
+        console.log('  - Total input ERG:', Number(totalInputValue) / 1000000000);
+        console.log('  - Token types found:', tokenRegistry.size);
+        
+        if (tokenRegistry.size > 0) {
+            console.log('  - Tokens to preserve:', Array.from(tokenRegistry.entries()).map(([id, amt]) =>
+                `${id.substring(0, 8)}...${id.substring(id.length - 8)} (${amt.toString()})`
+            ));
+        }
 
-        // 5. Build outputs
+        // 5. Build outputs with COMPLETE validation
         const outputs = [];
 
-        // Output 1: Donation (ERG only, NO tokens)
+        // Output 1: Donation (ERG only, NO tokens) - CORRECTED ErgoTree
         outputs.push({
             value: donationNanoERGs.toString(),
-            ergoTree: "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d", // Fixed ErgoTree for donation
-            assets: [], // IMPORTANT! No tokens in donation
+            ergoTree: DONATION_ERGOTREE, // CORRECTED: Use proper ErgoTree
+            assets: [], // CRITICAL: No tokens in donation!
             additionalRegisters: {},
             creationHeight: currentHeight
         });
 
-        console.log('✅ Donation output created: ERG only, no tokens');
+        console.log('✅ Donation output created:');
+        console.log('  - Value:', Number(donationNanoERGs) / 1000000000, 'ERG');
+        console.log('  - ErgoTree:', DONATION_ERGOTREE);
+        console.log('  - Assets: NONE (preserving for sender)');
 
-        // Output 2: Change (remaining ERG + ALL tokens)
+        // Output 2: Change (remaining ERG + ALL tokens) - EXACTLY like donaciones.html
         const changeValue = totalInputValue - donationNanoERGs - feeNanoERGs;
 
+        // CRITICAL: Always create change output if there are tokens OR remaining ERG
         if (changeValue > 0n || tokenRegistry.size > 0) {
-            // CRITICAL! Use ErgoTree from first input UTXO
-            // This ensures tokens return to your wallet correctly
+            // Use ErgoTree from first input to ensure tokens return correctly
             const changeErgoTree = selectedUtxos[0].ergoTree;
 
-            // Convert tokens from registry to output format
+            // Convert all tokens to output format
             const tokensForChange = Array.from(tokenRegistry.entries()).map(([tokenId, amount]) => ({
                 tokenId: tokenId,
                 amount: amount.toString()
             }));
 
-            // Ensure minimum amount for boxes with tokens
-            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Min 0.001 ERG
+            // CRITICAL: Ensure minimum value for boxes with tokens (0.001 ERG minimum)
+            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n;
 
             outputs.push({
                 value: finalChangeValue.toString(),
-                ergoTree: changeErgoTree, // SAME ERGOTREE AS INPUTS!
+                ergoTree: changeErgoTree, // SAME AS INPUT!
                 assets: tokensForChange, // ALL TOKENS HERE!
                 additionalRegisters: {},
                 creationHeight: currentHeight
             });
 
             console.log('✅ Change output created:');
-            console.log('  - ERG:', Number(finalChangeValue) / 1000000000);
-            console.log('  - Tokens:', tokensForChange.length);
-            console.log('  - ErgoTree match:', changeErgoTree === selectedUtxos[0].ergoTree ? 'YES' : 'NO');
+            console.log('  - ERG returned:', Number(finalChangeValue) / 1000000000);
+            console.log('  - Tokens preserved:', tokensForChange.length);
+            console.log('  - ErgoTree match:', changeErgoTree === selectedUtxos[0].ergoTree ? 'YES ✓' : 'NO ❌');
+
+            // VALIDATION: Ensure no ERG is lost
+            const totalOutputValue = donationNanoERGs + finalChangeValue + feeNanoERGs;
+            if (totalOutputValue !== totalInputValue) {
+                console.error('❌ ERG BALANCE ERROR:');
+                console.error('  - Input total:', Number(totalInputValue) / 1000000000, 'ERG');
+                console.error('  - Output total:', Number(totalOutputValue) / 1000000000, 'ERG');
+                throw new Error('Transaction balance error: Input and output ERG amounts do not match');
+            }
+        } else {
+            // VALIDATION: Ensure no remaining ERG is lost to fees
+            const remainingERG = Number(changeValue) / 1000000000;
+            if (remainingERG > 0.000000001) { // More than 1 nanoERG
+                console.warn('⚠️ Small amount of ERG will be lost:', remainingERG, 'ERG');
+            }
         }
 
-        // 6. Build final transaction
+        // 6. Build and validate final transaction
         const unsignedTransaction = {
             inputs: selectedUtxos,
             outputs: outputs,
             dataInputs: []
         };
 
-        console.log('📝 Transaction built:');
-        console.log('  - Inputs:', unsignedTransaction.inputs.length);
-        console.log('  - Outputs:', unsignedTransaction.outputs.length);
-        console.log('  - Tokens preserved:', tokenRegistry.size);
-        console.log('  - Summary:', `${amount} ERG donated, ${tokenRegistry.size} token types preserved`);
+        // FINAL VALIDATION: Check transaction integrity
+        const totalInputERG = selectedUtxos.reduce((sum, utxo) => sum + BigInt(utxo.value), 0n);
+        const totalOutputERG = outputs.reduce((sum, output) => sum + BigInt(output.value), 0n);
+        const impliedFee = totalInputERG - totalOutputERG;
 
-        showStatus('donationStatus', `🛡️ Transaction ready - ${tokenRegistry.size} token types preserved. Please confirm in Nautilus.`, 'info');
+        console.log('📝 Transaction validation:');
+        console.log('  - Inputs:', selectedUtxos.length);
+        console.log('  - Outputs:', outputs.length);
+        console.log('  - Input ERG:', Number(totalInputERG) / 1000000000);
+        console.log('  - Output ERG:', Number(totalOutputERG) / 1000000000);
+        console.log('  - Implied fee:', Number(impliedFee) / 1000000000, 'ERG');
+        console.log('  - Tokens preserved:', tokenRegistry.size);
+
+        // Validate fee is reasonable (between 0.001 and 0.01 ERG)
+        if (impliedFee < 1000000n || impliedFee > 10000000n) {
+            throw new Error(`Invalid transaction fee: ${Number(impliedFee) / 1000000000} ERG. Expected 0.001-0.01 ERG`);
+        }
+
+        showStatus('donationStatus', 
+            `🛡️ Transaction ready - ${tokenRegistry.size} token types preserved, ${Number(impliedFee) / 1000000000} ERG fee. Please confirm in Nautilus.`, 
+            'info'
+        );
 
         // 7. Sign transaction
-        console.log('✍️ Requesting signature...');
+        console.log('✍️ Requesting signature from Nautilus...');
         const signedTransaction = await ergoApi.sign_tx(unsignedTransaction);
         console.log('✅ Transaction signed successfully');
 
@@ -349,13 +400,15 @@ async function makeDonation() {
         showStatus('donationStatus', '📡 Submitting transaction to blockchain...', 'info');
         const txId = await ergoApi.submit_tx(signedTransaction);
 
-        console.log('🎉 DONATION COMPLETED!');
+        console.log('🎉 DONATION COMPLETED SUCCESSFULLY!');
         console.log('  - Transaction ID:', txId);
         console.log('  - Amount donated:', amount, 'ERG');
+        console.log('  - Donation address:', DONATION_ADDRESS);
         console.log('  - Tokens preserved:', tokenRegistry.size);
+        console.log('  - Fee paid:', Number(impliedFee) / 1000000000, 'ERG');
 
         showStatus('donationStatus',
-            `🎉 Donation successful! ${amount} ERG donated, ${tokenRegistry.size} token types preserved. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`,
+            `🎉 Donation successful! ${amount} ERG sent to ${DONATION_ADDRESS.substring(0, 10)}...${DONATION_ADDRESS.substring(DONATION_ADDRESS.length - 10)}. ${tokenRegistry.size} tokens preserved. TX: ${txId.substring(0, 8)}...${txId.substring(txId.length - 8)}`,
             'success'
         );
 
@@ -368,6 +421,13 @@ async function makeDonation() {
     } catch (error) {
         console.error('❌ DONATION ERROR:', error);
         showStatus('donationStatus', `❌ Transaction failed: ${error.message}`, 'error');
+        
+        // Log detailed error info for debugging
+        console.error('📍 Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
     } finally {
         donateBtn.disabled = false;
         donateBtn.innerHTML = originalText;
@@ -384,25 +444,24 @@ function showStatus(elementId, message, type = 'info') {
         if (type === 'success' || type === 'error') {
             setTimeout(() => {
                 statusElement.style.display = 'none';
-            }, 10000);
+            }, 15000); // Show success/error messages longer
         }
     } else {
-        console.log(`Status (${type}):`, message);
+        console.log(`📢 Status (${type}):`, message);
     }
 }
 
-// Utility function to get translations with fallback
+// Utility function to get translations with safe fallback
 function getTranslation(key) {
-    // Try to get translation from global function
     try {
         if (typeof window !== 'undefined' && typeof window.getTranslation === 'function') {
             return window.getTranslation(key);
         }
     } catch (e) {
-        // Ignore errors and use fallback
+        console.warn('⚠️ Translation error:', e.message);
     }
 
-    // Fallback translations
+    // Safe fallback translations
     const fallbacks = {
         'donate.walletReady': 'Nautilus Wallet detected - Ready to connect',
         'donate.connectBtn': 'Connect Nautilus Wallet',
