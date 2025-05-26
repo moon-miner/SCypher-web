@@ -1,4 +1,4 @@
-// donation.js - Token-safe donation functionality using Nautilus Wallet - FINAL VERSION
+// donation.js - Token-safe donation functionality using Nautilus Wallet - CLEAN VERSION
 
 // Configuration - UPDATED ADDRESS
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
@@ -194,7 +194,7 @@ async function connectWallet() {
     }
 }
 
-// FIXED: Make token-safe donation - Using the EXACT same logic as donaciones.html
+// Make token-safe donation - EXACT COPY FROM donaciones.html
 async function makeDonation() {
     if (!isWalletConnected || !ergoApi) {
         showStatus('donationStatus', 'Please connect your wallet first', 'error');
@@ -235,7 +235,7 @@ async function makeDonation() {
         console.log('  - Fee:', feeNanoERGs.toString(), 'nanoERG');
         console.log('  - Total needed:', totalNeededNanoERGs.toString(), 'nanoERG');
 
-        // 3. Get UTXOs
+        // 3. Get UTXOs that cover the needed amount
         const availableUtxos = await ergoApi.get_utxos();
         if (!availableUtxos || availableUtxos.length === 0) {
             throw new Error('No UTXOs available in your wallet');
@@ -243,7 +243,7 @@ async function makeDonation() {
 
         console.log('📦 Available UTXOs:', availableUtxos.length);
 
-        // 4. Select UTXOs and collect tokens - EXACT SAME LOGIC AS donaciones.html
+        // 4. Select UTXOs and collect tokens
         let selectedUtxos = [];
         let totalInputValue = 0n;
         const tokenRegistry = new Map(); // tokenId -> total amount
@@ -276,36 +276,39 @@ async function makeDonation() {
         console.log('  - UTXOs selected:', selectedUtxos.length);
         console.log('  - Total ERG:', Number(totalInputValue) / 1000000000);
         console.log('  - Token types:', tokenRegistry.size);
+        console.log('  - Token list:', Array.from(tokenRegistry.entries()).map(([id, amt]) =>
+            `${id.substring(0, 8)}... (${amt.toString()})`
+        ));
 
-        // 5. Build outputs - FIXED: Using correct ErgoTree exactly like donaciones.html
+        // 5. Build outputs
         const outputs = [];
 
         // Output 1: Donation (ERG only, NO tokens)
-        // FIXED: Use the exact same ErgoTree as donaciones.html
         outputs.push({
             value: donationNanoERGs.toString(),
-            ergoTree: "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d", // Fixed ErgoTree
-            assets: [], // CRITICAL: No tokens in donation!
+            ergoTree: "0008cd02217daf90deb73bdf8b6709bb42093fdfaff6573fd47b630e2d3fdd4a8193a74d", // Fixed ErgoTree for donation
+            assets: [], // IMPORTANT! No tokens in donation
             additionalRegisters: {},
             creationHeight: currentHeight
         });
 
         console.log('✅ Donation output created: ERG only, no tokens');
 
-        // Output 2: Change (remaining ERG + ALL tokens) - SAME LOGIC AS donaciones.html
+        // Output 2: Change (remaining ERG + ALL tokens)
         const changeValue = totalInputValue - donationNanoERGs - feeNanoERGs;
 
         if (changeValue > 0n || tokenRegistry.size > 0) {
-            // CRITICAL: Use ErgoTree from first input - SAME AS donaciones.html
+            // CRITICAL! Use ErgoTree from first input UTXO
+            // This ensures tokens return to your wallet correctly
             const changeErgoTree = selectedUtxos[0].ergoTree;
 
-            // Convert token registry to output format
+            // Convert tokens from registry to output format
             const tokensForChange = Array.from(tokenRegistry.entries()).map(([tokenId, amount]) => ({
                 tokenId: tokenId,
                 amount: amount.toString()
             }));
 
-            // Ensure minimum value for boxes with tokens
+            // Ensure minimum amount for boxes with tokens
             const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Min 0.001 ERG
 
             outputs.push({
@@ -322,7 +325,7 @@ async function makeDonation() {
             console.log('  - ErgoTree match:', changeErgoTree === selectedUtxos[0].ergoTree ? 'YES' : 'NO');
         }
 
-        // 6. Build final transaction - SAME AS donaciones.html
+        // 6. Build final transaction
         const unsignedTransaction = {
             inputs: selectedUtxos,
             outputs: outputs,
@@ -330,9 +333,10 @@ async function makeDonation() {
         };
 
         console.log('📝 Transaction built:');
-        console.log('  - Inputs:', selectedUtxos.length);
-        console.log('  - Outputs:', outputs.length);
+        console.log('  - Inputs:', unsignedTransaction.inputs.length);
+        console.log('  - Outputs:', unsignedTransaction.outputs.length);
         console.log('  - Tokens preserved:', tokenRegistry.size);
+        console.log('  - Summary:', `${amount} ERG donated, ${tokenRegistry.size} token types preserved`);
 
         showStatus('donationStatus', `🛡️ Transaction ready - ${tokenRegistry.size} token types preserved. Please confirm in Nautilus.`, 'info');
 
@@ -387,52 +391,18 @@ function showStatus(elementId, message, type = 'info') {
     }
 }
 
-// FIXED: Utility function to get translations
+// Utility function to get translations with fallback
 function getTranslation(key) {
-    // Verificar si las traducciones están disponibles
-    if (typeof window === 'undefined' || !window.translations) {
-        console.warn('⚠️ Translations not available, using fallback for:', key);
-        return getFallbackTranslation(key);
-    }
-
-    // Obtener idioma actual
-    const currentLang = localStorage.getItem('scypher-lang') || 'en';
-    
-    // Verificar si el idioma existe
-    if (!window.translations[currentLang]) {
-        console.warn('⚠️ Language not found:', currentLang, 'using English');
-        return getTranslationForLang(key, 'en');
-    }
-
-    return getTranslationForLang(key, currentLang);
-}
-
-// Función auxiliar para obtener traducción de un idioma específico
-function getTranslationForLang(keyPath, lang) {
-    if (!window.translations || !window.translations[lang]) {
-        return getFallbackTranslation(keyPath);
-    }
-
-    const keys = keyPath.split('.');
-    let value = window.translations[lang];
-
-    for (const key of keys) {
-        if (value && typeof value === 'object' && value[key]) {
-            value = value[key];
-        } else {
-            // Si no se encuentra en el idioma actual, intentar en inglés
-            if (lang !== 'en' && window.translations.en) {
-                return getTranslationForLang(keyPath, 'en');
-            }
-            return getFallbackTranslation(keyPath);
+    // Try to get translation from global function
+    try {
+        if (typeof window !== 'undefined' && typeof window.getTranslation === 'function') {
+            return window.getTranslation(key);
         }
+    } catch (e) {
+        // Ignore errors and use fallback
     }
 
-    return value || getFallbackTranslation(keyPath);
-}
-
-// Función de fallback para traducciones críticas
-function getFallbackTranslation(key) {
+    // Fallback translations
     const fallbacks = {
         'donate.walletReady': 'Nautilus Wallet detected - Ready to connect',
         'donate.connectBtn': 'Connect Nautilus Wallet',
