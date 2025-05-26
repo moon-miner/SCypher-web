@@ -348,7 +348,7 @@ async function buildDonationTransaction(amount) {
         console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
         console.log('  - Tokens in inputs:', allTokens.size);
 
-        // ========== CONSTRUCCIÓN CORRECTA SEGÚN NAUTILUS/ERGO ==========
+        // ========== CONSTRUCCIÓN CORRECTA CON FEE OUTPUT SEPARADO ==========
         
         const outputs = [];
 
@@ -367,18 +367,33 @@ async function buildDonationTransaction(amount) {
         console.log('  - To address:', DONATION_ADDRESS);
         console.log('  - ErgoTree:', donationErgoTree);
 
-        // OUTPUT 2: Change (con fee deducido según documentación oficial de Ergo)
-        // Según docs: "Transaction fees are collected in a specific contract"
-        // Fee debe ser deducido del cambio: Inputs = Outputs + Fee
+        // OUTPUT 2: Fee Output (CRÍTICO - según documentación oficial)
+        // "Create one fee output protected by the minerFee contract with txFee ERGs"
+        const feeErgoTree = "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304";
+        const feeOutput = {
+            value: RECOMMENDED_MIN_FEE.toString(),
+            ergoTree: feeErgoTree, // Miner fee contract
+            assets: [],
+            additionalRegisters: {},
+            creationHeight: currentHeight
+        };
+        outputs.push(feeOutput);
+
+        console.log('✅ OUTPUT 2 - MINER FEE:');
+        console.log('  - Fee amount:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - To miner contract');
+        console.log('  - ErgoTree:', feeErgoTree);
+
+        // OUTPUT 3: Change (sin deducir fee - ya está en output separado)
         const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE;
         
-        console.log('🔍 BALANCE CALCULATION (según docs oficiales de Ergo):');
+        console.log('🔍 BALANCE CALCULATION (con fee output separado):');
         console.log('  - Total inputs:', Number(totalInputValue) / 1000000000, 'ERG');
         console.log('  - Donation output:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Fee (to miners):', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - Fee output:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
         console.log('  - Change remaining:', Number(changeValue) / 1000000000, 'ERG');
-        console.log('  - Formula: Inputs = Outputs + Fee');
-        console.log('  - Verification:', Number(totalInputValue) === Number(amountNanoErg + changeValue + RECOMMENDED_MIN_FEE) ? '✅ CORRECT' : '❌ ERROR');
+        console.log('  - Formula: Inputs = Donation + Fee + Change');
+        console.log('  - Verification:', Number(totalInputValue) === Number(amountNanoErg + RECOMMENDED_MIN_FEE + changeValue) ? '✅ CORRECT' : '❌ ERROR');
         
         if (changeValue > 0n || allTokens.size > 0) {
             // Convert tokens for change output
@@ -390,8 +405,7 @@ async function buildDonationTransaction(amount) {
             // Si no hay ERG de cambio pero sí tokens, necesitamos ERG mínimo
             let finalChangeValue = changeValue;
             if (changeValue < 1000000n && allTokens.size > 0) {
-                // Ajustar para valor mínimo de caja con tokens
-                finalChangeValue = 1000000n; // 0.001 ERG mínimo
+                finalChangeValue = 1000000n; // 0.001 ERG mínimo para caja con tokens
                 console.log('⚠️ Adjusting change for minimum token box value');
             }
 
@@ -406,7 +420,7 @@ async function buildDonationTransaction(amount) {
                 };
                 outputs.push(changeOutput);
 
-                console.log('✅ OUTPUT 2 - CHANGE:');
+                console.log('✅ OUTPUT 3 - CHANGE:');
                 console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
                 console.log('  - Tokens returned:', changeTokens.length);
                 console.log('  - Back to sender ErgoTree:', senderErgoTree);
@@ -419,10 +433,10 @@ async function buildDonationTransaction(amount) {
                 }
             }
         } else if (changeValue === 0n && allTokens.size === 0) {
-            console.log('ℹ️  No change output - exact amount with fee');
+            console.log('ℹ️  No change output - exact amount');
         } else {
-            console.error('🚨 Insufficient funds for fee after donation');
-            throw new Error(`Insufficient funds. After donation of ${Number(amountNanoErg) / 1000000000} ERG, remaining ${Number(changeValue) / 1000000000} ERG is insufficient for ${Number(RECOMMENDED_MIN_FEE) / 1000000000} ERG fee`);
+            console.error('🚨 Insufficient funds for transaction after fee');
+            throw new Error(`Insufficient funds. After donation and fee, remaining ${Number(changeValue) / 1000000000} ERG is insufficient`);
         }
 
         // Build final transaction (Fleet SDK .build())
@@ -432,7 +446,7 @@ async function buildDonationTransaction(amount) {
             dataInputs: []
         };
 
-        console.log('📝 FINAL TRANSACTION (Ergo Standard):');
+        console.log('📝 FINAL TRANSACTION (con fee output separado):');
         console.log('════════════════════════════════════════');
         console.log('📥 INPUTS:', transaction.inputs.length, 'UTXOs');
         console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
@@ -444,6 +458,8 @@ async function buildDonationTransaction(amount) {
             totalOutputValue += BigInt(output.value);
             if (index === 0) {
                 console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
+            } else if (index === 1) {
+                console.log(`  ${index + 1}. MINER FEE: ${ergAmount} ERG → fee contract`);
             } else {
                 console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → (back to you)`);
             }
@@ -451,15 +467,12 @@ async function buildDonationTransaction(amount) {
         
         console.log('  - Total output value:', Number(totalOutputValue) / 1000000000, 'ERG');
         
-        const implicitFee = totalInputValue - totalOutputValue;
-        console.log('💰 FEE VERIFICATION (según docs oficiales):');
-        console.log(`  - Calculated fee: ${Number(implicitFee) / 1000000000} ERG`);
-        console.log(`  - Expected fee: ${Number(RECOMMENDED_MIN_FEE) / 1000000000} ERG`);
-        console.log(`  - Fee meets minimum: ${implicitFee >= RECOMMENDED_MIN_FEE ? '✅ YES' : '❌ NO'}`);
-        console.log(`  - Fee collected by miners contract: ${implicitFee > 0n ? '✅ YES' : '❌ NO'}`);
-        console.log('  - Formula: Total Inputs = Total Outputs + Fee');
-        console.log(`  - Verification: ${Number(totalInputValue)} = ${Number(totalOutputValue)} + ${Number(implicitFee)} = ${Number(totalOutputValue + implicitFee)}`);
-        console.log(`  - Balance correct: ${totalInputValue === (totalOutputValue + implicitFee) ? '✅ YES' : '❌ NO'}`);
+        console.log('💰 BALANCE VERIFICATION (con fee output):');
+        console.log(`  - Total inputs: ${Number(totalInputValue) / 1000000000} ERG`);
+        console.log(`  - Total outputs: ${Number(totalOutputValue) / 1000000000} ERG`);
+        console.log(`  - Difference: ${Number(totalInputValue - totalOutputValue) / 1000000000} ERG`);
+        console.log(`  - Perfect balance: ${totalInputValue === totalOutputValue ? '✅ YES (Inputs = Outputs)' : '❌ NO'}`);
+        console.log('  - Fee is now an explicit output, not implicit');
         console.log('════════════════════════════════════════');
 
         return {
