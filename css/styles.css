@@ -1107,3 +1107,13 @@ a:hover {
         font-size: 0.9rem;
     }
 }
+
+.loading {
+    display: none !important;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: var(--secondary-color) !important;
+}
