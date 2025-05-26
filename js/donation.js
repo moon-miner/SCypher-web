@@ -331,12 +331,12 @@ async function makeDonation() {
 
         // Calculate amounts
         const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
-        const minFee = 1000000n; // 0.001 ERG
-        const totalNeeded = amountNanoErg + minFee;
+        const networkFee = 1100000n; // 0.0011 ERG (network fee estándar)
+        const totalNeeded = amountNanoErg + networkFee;
 
         console.log('💰 Transaction amounts:');
         console.log('  - Donation:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Fee:', Number(minFee) / 1000000000, 'ERG');
+        console.log('  - Network Fee:', Number(networkFee) / 1000000000, 'ERG');
         console.log('  - Total needed:', Number(totalNeeded) / 1000000000, 'ERG');
 
         // Select UTXOs and collect tokens
@@ -402,15 +402,26 @@ async function makeDonation() {
         console.log('  - Assets: none (pure ERG donation)');
 
         // Output 2: Change - ERG restante + todos los tokens de vuelta al sender
-        const changeValue = totalValue - amountNanoErg - minFee;
+        const changeValue = totalValue - amountNanoErg - networkFee;
 
+        // SIEMPRE crear output de cambio si hay ERG sobrante O tokens que devolver
         if (changeValue > 0n || allTokens.size > 0) {
             const changeTokens = Array.from(allTokens.entries()).map(([tokenId, amount]) => ({
                 tokenId,
                 amount: amount.toString()
             }));
 
-            const finalChangeValue = changeValue > 0n ? changeValue : 1000000n; // Min 0.001 ERG para caja con tokens
+            // Si no hay ERG de cambio pero sí tokens, necesitamos ERG mínimo para la caja
+            let finalChangeValue = changeValue;
+            if (changeValue <= 0n && allTokens.size > 0) {
+                // Necesitamos ajustar para incluir ERG mínimo para caja con tokens
+                finalChangeValue = 1000000n; // 0.001 ERG mínimo
+                // Recalcular el fee total
+                const adjustedTotal = amountNanoErg + networkFee + finalChangeValue;
+                if (totalValue < adjustedTotal) {
+                    throw new Error(`Insufficient funds for tokens. Need ${Number(adjustedTotal) / 1000000000} ERG total`);
+                }
+            }
 
             outputs.push({
                 value: finalChangeValue.toString(),
@@ -421,9 +432,18 @@ async function makeDonation() {
             });
 
             console.log('✅ Change output created:');
-            console.log('  - ERG returned:', Number(finalChangeValue) / 1000000000);
-            console.log('  - Tokens returned:', changeTokens.length);
-            console.log('  - Change ErgoTree:', senderErgoTree);
+            console.log('  - ERG returned to sender:', Number(finalChangeValue) / 1000000000);
+            console.log('  - Tokens returned to sender:', changeTokens.length);
+            console.log('  - Change ErgoTree (sender):', senderErgoTree);
+            
+            if (changeTokens.length > 0) {
+                console.log('  - Tokens being returned:');
+                changeTokens.forEach(token => {
+                    console.log(`    * Token ${token.tokenId.substring(0, 8)}...: ${token.amount}`);
+                });
+            }
+        } else if (changeValue === 0n && allTokens.size === 0) {
+            console.log('✅ No change output needed - exact amount + fee');
         }
 
         // Verificación final
@@ -441,14 +461,31 @@ async function makeDonation() {
             dataInputs: []
         };
 
-        console.log('📝 Final transaction:');
-        console.log('  - Inputs:', transaction.inputs.length);
-        console.log('  - Outputs:', transaction.outputs.length);
-        console.log('  - Donation to:', DONATION_ADDRESS);
-        console.log('  - Amount:', amount, 'ERG');
-        console.log('  - Tokens preserved:', allTokens.size);
+        console.log('📝 FINAL TRANSACTION SUMMARY:');
+        console.log('════════════════════════════════════════');
+        console.log('📥 INPUTS:');
+        console.log(`  - UTXOs used: ${transaction.inputs.length}`);
+        console.log(`  - Total ERG input: ${Number(totalValue) / 1000000000} ERG`);
+        console.log(`  - Total tokens input: ${allTokens.size} different tokens`);
+        
+        console.log('📤 OUTPUTS:');
+        transaction.outputs.forEach((output, index) => {
+            const ergAmount = Number(BigInt(output.value)) / 1000000000;
+            if (output.ergoTree === donationErgoTree) {
+                console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
+            } else {
+                console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → (back to you)`);
+            }
+        });
+        
+        console.log('💰 AMOUNTS BREAKDOWN:');
+        console.log(`  - Donation amount: ${amount} ERG`);
+        console.log(`  - Network fee: ${Number(networkFee) / 1000000000} ERG`);
+        console.log(`  - Change returned: ${outputs.length > 1 ? Number(BigInt(outputs[1].value)) / 1000000000 : 0} ERG`);
+        console.log(`  - Tokens preserved: ${allTokens.size} types`);
+        console.log('════════════════════════════════════════');
 
-        showStatus('donationStatus', `✍️ Please confirm transaction in Nautilus. Donating ${amount} ERG to ${DONATION_ADDRESS.substring(0, 10)}...`, 'info');
+        showStatus('donationStatus', `✍️ Please confirm transaction in Nautilus:\n• Donating ${amount} ERG\n• Network fee: ${Number(networkFee) / 1000000000} ERG\n• ${allTokens.size > 0 ? 'Your tokens will be preserved' : 'No tokens to preserve'}`, 'info');
 
         // Sign the transaction
         const signedTx = await ergoApi.sign_tx(transaction);
