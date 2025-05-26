@@ -1,4 +1,4 @@
-// download.js - Blockchain download functionality
+// download.js - Blockchain download functionality (Updated - Direct XZ delivery)
 
 // Token URLs for Scypher script fragments
 const TOKEN_URLS = [
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Main download handler
+// Main download handler with enhanced visual feedback
 async function handleDownload() {
     const downloadBtn = document.getElementById('downloadBtn');
     const originalContent = downloadBtn.innerHTML;
@@ -24,134 +24,208 @@ async function handleDownload() {
     try {
         // Update button state
         downloadBtn.disabled = true;
-        downloadBtn.innerHTML = '<div class="loading"></div> Fetching from blockchain...';
-        showStatus('downloadStatus', 'Connecting to Ergo blockchain...', 'loading');
+        downloadBtn.innerHTML = '<div class="loading"></div> ' + getTranslation('download.progress.connecting');
+        showStatus('downloadStatus', getTranslation('download.progress.initializing'), 'loading');
 
-        // Fetch all token data
-        const base64Content = await fetchAllTokenData();
+        // Phase 1: Fetch fragments from blockchain
+        showStatus('downloadStatus', getTranslation('download.progress.fetching'), 'loading');
+        const base64Content = await fetchAllTokenDataWithProgress();
 
-        // Decode base64 to binary
-        showStatus('downloadStatus', 'Decoding data...', 'loading');
+        // Phase 2: Reconstruct XZ file
+        showStatus('downloadStatus', getTranslation('download.progress.reconstructing'), 'loading');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause for UX
+
+        // Convert base64 to binary data (XZ file)
         const binaryString = atob(base64Content);
-
-        // Convert binary string to Uint8Array
-        const bytes = new Uint8Array(binaryString.length);
+        const xzBytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+            xzBytes[i] = binaryString.charCodeAt(i);
         }
 
-        // Decompress XZ data
-        showStatus('downloadStatus', 'Decompressing script...', 'loading');
-        const decompressed = await decompressXZ(bytes);
+        // Phase 3: Prepare download
+        showStatus('downloadStatus', getTranslation('download.progress.preparing'), 'loading');
+        await new Promise(resolve => setTimeout(resolve, 300)); // Brief pause for UX
 
-        // Create download
-        createDownload(decompressed, 'scypher.sh');
+        // Create direct XZ download (no decompression)
+        createXZDownload(xzBytes, 'scypher.sh.xz');
 
-        showStatus('downloadStatus', '✅ Successfully downloaded scypher.sh from blockchain!', 'success');
+        // Success message
+        showStatus('downloadStatus', getTranslation('download.progress.success'), 'success');
+
+        // Update button to show completion
+        downloadBtn.innerHTML = '✅ ' + getTranslation('download.progress.completed');
+        
+        // Reset button after success
+        setTimeout(() => {
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = originalContent;
+        }, 3000);
 
     } catch (error) {
         console.error('Download error:', error);
-        showStatus('downloadStatus', `❌ Error: ${error.message}`, 'error');
-    } finally {
-        // Restore button state
+        showStatus('downloadStatus', `❌ ${getTranslation('download.progress.error')}: ${error.message}`, 'error');
+        
+        // Reset button on error
         downloadBtn.disabled = false;
         downloadBtn.innerHTML = originalContent;
     }
 }
 
-// Fetch all token data and combine
-async function fetchAllTokenData() {
+// Enhanced fetch function with detailed progress
+async function fetchAllTokenDataWithProgress() {
     const fragments = [];
+    const totalFragments = TOKEN_URLS.length;
 
     for (let i = 0; i < TOKEN_URLS.length; i++) {
-        showStatus('downloadStatus', `Fetching fragment ${i + 1} of ${TOKEN_URLS.length}...`, 'loading');
+        const fragmentNumber = i + 1;
+        const progressMessage = getTranslation('download.progress.fragment')
+            .replace('{current}', fragmentNumber)
+            .replace('{total}', totalFragments);
+            
+        showStatus('downloadStatus', `🔍 ${progressMessage}`, 'loading');
 
         try {
             const response = await fetch(TOKEN_URLS[i]);
             if (!response.ok) {
-                throw new Error(`Failed to fetch token ${i + 1}: ${response.statusText}`);
+                throw new Error(`${getTranslation('download.progress.fetchError')} ${fragmentNumber}: ${response.statusText}`);
             }
 
             const data = await response.json();
             if (!data.description) {
-                throw new Error(`Token ${i + 1} has no description field`);
+                throw new Error(`${getTranslation('download.progress.noDescription')} ${fragmentNumber}`);
             }
 
             fragments.push(data.description);
+            
+            // Show progress for each fragment
+            console.log(`✅ Fragment ${fragmentNumber}/${totalFragments} fetched successfully`);
+            
+            // Brief pause between fragments for better UX
+            if (i < TOKEN_URLS.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
 
         } catch (error) {
-            throw new Error(`Failed to fetch fragment ${i + 1}: ${error.message}`);
+            throw new Error(`${getTranslation('download.progress.fragmentFailed')} ${fragmentNumber}: ${error.message}`);
         }
     }
 
+    // Show combining phase
+    showStatus('downloadStatus', `🧩 ${getTranslation('download.progress.combining')}`, 'loading');
+    console.log('🧩 Combining all base64 fragments...');
+
     // Combine all fragments
-    return fragments.join('');
+    const combinedBase64 = fragments.join('');
+    
+    console.log(`✅ Successfully combined ${fragments.length} fragments`);
+    console.log(`📊 Total base64 length: ${combinedBase64.length} characters`);
+    
+    return combinedBase64;
 }
 
-// Decompress XZ data using pure JavaScript
-async function decompressXZ(compressedData) {
-    // XZ decompression is complex, so we'll use a simpler approach
-    // Since the browser can't natively decompress XZ, we'll fetch the pre-decompressed version
-    // from the blockchain or provide the actual bash script content
+// Create XZ file download directly (no decompression)
+function createXZDownload(xzBytes, filename) {
+    console.log('📦 Creating XZ file download...');
+    console.log(`📊 XZ file size: ${xzBytes.length} bytes`);
+    console.log(`📄 Filename: ${filename}`);
 
-    // For now, we'll show an alternative approach
-    throw new Error('XZ decompression in browser requires additional libraries. Please use the bash download script instead.');
-
-    // In a production environment, you would either:
-    // 1. Include an XZ decompression library like lzma-js
-    // 2. Store the uncompressed version on the blockchain
-    // 3. Use a different compression format that's browser-compatible (like gzip)
-}
-
-// Alternative: Direct script delivery (for demo purposes)
-function getScypherScript() {
-    // This would contain the full scypher.sh script
-    // For production, this should be fetched from the blockchain
-    return `#!/usr/bin/env bash
-# SCypher - XOR-based BIP39 Seed Cipher (v2.0)
-# This is a placeholder - the actual script would be fetched from blockchain
-echo "This is a placeholder for the actual scypher.sh script"
-echo "In production, this would be fetched and reconstructed from the Ergo blockchain"
-`;
-}
-
-// Create download link
-function createDownload(content, filename) {
-    // For demo purposes, use the placeholder script
-    const scriptContent = getScypherScript();
-
-    // Create blob
-    const blob = new Blob([scriptContent], { type: 'text/plain' });
+    // Create blob with XZ binary data
+    const blob = new Blob([xzBytes], { 
+        type: 'application/x-xz' // Proper MIME type for XZ files
+    });
 
     // Create download link
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = filename;
+    downloadLink.style.display = 'none';
 
     // Trigger download
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
 
-    // Clean up
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    // Clean up blob URL
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+        console.log('🧹 Blob URL cleaned up');
+    }, 100);
+
+    console.log('✅ XZ file download initiated successfully');
 }
 
-// Alternative download method with instructions
-function provideAlternativeDownload() {
-    const instructions = `
-# Alternative Download Method
+// Utility function for status messages with translation support
+function showStatus(elementId, message, type = 'info') {
+    const statusElement = document.getElementById(elementId);
+    if (statusElement) {
+        // Clear previous status
+        statusElement.className = `download-status ${type}`;
+        statusElement.innerHTML = message;
+        statusElement.style.display = 'block';
 
-Since XZ decompression in the browser requires additional libraries,
-you can download the script using the bash command:
+        console.log(`📢 Status (${type}):`, message);
+
+        // Auto-hide success and error messages after delay
+        if (type === 'success') {
+            setTimeout(() => {
+                if (statusElement) {
+                    statusElement.style.display = 'none';
+                }
+            }, 8000);
+        } else if (type === 'error') {
+            setTimeout(() => {
+                if (statusElement) {
+                    statusElement.style.display = 'none';
+                }
+            }, 12000);
+        }
+    } else {
+        console.log(`📢 Status (${type}) [${elementId}]:`, message);
+    }
+}
+
+// Get translation with fallback
+function getTranslation(key) {
+    try {
+        if (typeof window !== 'undefined' && typeof window.getTranslation === 'function') {
+            return window.getTranslation(key);
+        }
+    } catch (e) {
+        console.warn('⚠️ Translation error:', e.message);
+    }
+
+    // Fallback translations for new download messages
+    const fallbacks = {
+        'download.progress.connecting': 'Connecting to Ergo blockchain...',
+        'download.progress.initializing': 'Initializing decentralized download...',
+        'download.progress.fetching': 'Fetching script fragments from blockchain...',
+        'download.progress.fragment': 'Downloading fragment {current} of {total} from blockchain...',
+        'download.progress.combining': 'Combining base64 fragments...',
+        'download.progress.reconstructing': 'Reconstructing XZ archive...',
+        'download.progress.preparing': 'Preparing download...',
+        'download.progress.success': '✅ Successfully downloaded scypher.sh.xz from blockchain!',
+        'download.progress.completed': 'Download Completed',
+        'download.progress.error': 'Download failed',
+        'download.progress.fetchError': 'Failed to fetch fragment',
+        'download.progress.noDescription': 'Fragment has no description field',
+        'download.progress.fragmentFailed': 'Fragment download failed'
+    };
+
+    return fallbacks[key] || key;
+}
+
+// Alternative download method information (updated for XZ)
+function provideAlternativeDownload() {
+    const instructions = `# Alternative Download Method
+
+You can download the XZ compressed script using bash:
 
 \`\`\`bash
 #!/bin/bash
-
 # Save this as download-scypher.sh and run it
 
-# URLs
+# Token URLs
 urls=(
     "https://api.sigmaspace.io/api/v1/tokens/e19e95429dc4566292ddda535129aa5e3c0b31d9139814a52e21508510a9b389"
     "https://api.sigmaspace.io/api/v1/tokens/01efc34d6752de5554d1d756b1fba3da094e41f8cf59904902ed90ec3e18ef43"
@@ -159,19 +233,27 @@ urls=(
     "https://api.sigmaspace.io/api/v1/tokens/aca4dd9bcd304e3bd32d21e477d7b3b840f7d50ebb85b7a6ab1cc483a7ebaa9a"
 )
 
-# Download and combine
-> scypherBASE64.txt
-for url in "\${urls[@]}"; do
-    curl -s -X GET "$url" | jq -r '.description' >> scypherBASE64.txt
+echo "🔍 Fetching Scypher fragments from Ergo blockchain..."
+
+# Download and combine fragments
+> scypher_base64.txt
+for i in "\${!urls[@]}"; do
+    echo "📦 Fetching fragment $((i+1))/\${#urls[@]}..."
+    curl -s -X GET "\${urls[i]}" | jq -r '.description' >> scypher_base64.txt
 done
 
-# Decode and decompress
-base64 -d scypherBASE64.txt > scypher.sh.xz
-xz -d scypher.sh.xz
-rm scypherBASE64.txt
+echo "🧩 Reconstructing XZ archive..."
+# Decode base64 to create XZ file
+base64 -d scypher_base64.txt > scypher.sh.xz
 
-echo "Download complete: scypher.sh"
+# Clean up
+rm scypher_base64.txt
+
+echo "✅ Download complete: scypher.sh.xz"
+echo "📄 To extract: xz -d scypher.sh.xz"
 \`\`\`
+
+The downloaded file is compressed with XZ. Use \`xz -d scypher.sh.xz\` to extract it.
 `;
 
     // Create download for the bash script
