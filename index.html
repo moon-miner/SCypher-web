@@ -1,267 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scypher - Decentralized BIP39 Seed Cipher</title>
-    <meta name="description" content="Secure BIP39 seed phrase encryption stored on Ergo blockchain">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <span class="logo">🔐</span>
-                <span class="brand-name">Scypher</span>
+<!-- Updated Download Section for index.html -->
+<section id="download" class="section section-alt">
+    <div class="container">
+        <h2 class="section-title" data-i18n="download.title">Download Scypher</h2>
+        <p class="section-subtitle" data-i18n="download.subtitle">
+            Retrieve the cipher script directly from Ergo blockchain
+        </p>
+
+        <div class="download-container">
+            <div class="download-box">
+                <h3 data-i18n="download.blockchain.title">Download from Blockchain</h3>
+                <p data-i18n="download.blockchain.desc">
+                    Click below to fetch the script fragments from Ergo blockchain and reconstruct the original scypher.sh.xz file
+                </p>
+                <button id="downloadBtn" class="btn btn-primary btn-large">
+                    <span class="btn-icon">⬇️</span>
+                    <span data-i18n="download.blockchain.button">Fetch from Blockchain</span>
+                </button>
+                <div id="downloadStatus" class="download-status"></div>
             </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
-                <li><a href="#download" class="nav-link">Download</a></li>
-                <li><a href="#donate" class="nav-link">Donate</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-                <li class="nav-lang">
-                    <select id="langSelect" class="lang-select">
-                        <option value="en">EN</option>
-                        <option value="es">ES</option>
-                        <option value="zh">中文</option>
-                        <option value="de">DE</option>
-                        <option value="ru">РУ</option>
-                    </select>
-                </li>
+
+            <div class="download-info">
+                <h4 data-i18n="download.info.title">What happens when you download?</h4>
+                <ol class="download-steps">
+                    <li data-i18n="download.info.step1">Fetches token data from Ergo blockchain API</li>
+                    <li data-i18n="download.info.step2">Combines base64 encoded fragments</li>
+                    <li data-i18n="download.info.step3">Reconstructs the compressed XZ archive</li>
+                    <li data-i18n="download.info.step4">Delivers the original scypher.sh.xz file</li>
+                </ol>
+                
+                <div class="download-note">
+                    <h5>📦 About the XZ format</h5>
+                    <p>The downloaded file is compressed with XZ for efficient storage on the blockchain. Extract it using:</p>
+                    <pre><code>xz -d scypher.sh.xz</code></pre>
+                    <p>This ensures maximum decentralization while maintaining small blockchain footprint.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="blockchain-transparency">
+            <h3>🔍 Blockchain Transparency</h3>
+            <p>Every download is completely transparent and verifiable:</p>
+            <ul class="transparency-list">
+                <li>✅ All script fragments are publicly stored on Ergo blockchain</li>
+                <li>✅ No central servers - direct blockchain access</li>
+                <li>✅ Immutable storage ensures script integrity</li>
+                <li>✅ Open source verification of the reconstruction process</li>
             </ul>
-            <div class="nav-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
         </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="section hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title" data-i18n="hero.title">Decentralized BIP39 Seed Cipher</h1>
-                <p class="hero-subtitle" data-i18n="hero.subtitle">
-                    Secure your seed phrases with XOR encryption. Code stored permanently on Ergo blockchain.
-                </p>
-                <div class="hero-buttons">
-                    <a href="#download" class="btn btn-primary" data-i18n="hero.downloadBtn">Download from Blockchain</a>
-                    <a href="#how-it-works" class="btn btn-secondary" data-i18n="hero.learnBtn">Learn More</a>
-                </div>
-                <div class="hero-features">
-                    <div class="feature-item">
-                        <span class="feature-icon">🛡️</span>
-                        <span data-i18n="hero.feature1">No Backend Required</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🔗</span>
-                        <span data-i18n="hero.feature2">Blockchain Verified</span>
-                    </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">🔓</span>
-                        <span data-i18n="hero.feature3">Open Source</span>
-                    </div>
-                </div>
-            </div>
+        <div class="github-links">
+            <a href="https://github.com/[PLACEHOLDER]/scypher" class="github-link" target="_blank">
+                <span class="github-icon">📦</span>
+                <span data-i18n="download.github.scypher">Scypher Repository</span>
+            </a>
+            <a href="https://github.com/[PLACEHOLDER]/scypher-web" class="github-link" target="_blank">
+                <span class="github-icon">🌐</span>
+                <span data-i18n="download.github.web">Website Repository</span>
+            </a>
         </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="how.title">How Scypher Works</h2>
-            <p class="section-subtitle" data-i18n="how.subtitle">
-                A revolutionary approach to seed phrase security using XOR encryption and blockchain storage
-            </p>
-
-            <div class="process-grid">
-                <div class="process-item">
-                    <div class="process-number">1</div>
-                    <h3 data-i18n="how.step1.title">XOR Encryption</h3>
-                    <p data-i18n="how.step1.desc">Your BIP39 seed phrase is encrypted using XOR cipher with SHAKE-256 key derivation</p>
-                </div>
-                <div class="process-item">
-                    <div class="process-number">2</div>
-                    <h3 data-i18n="how.step2.title">Blockchain Storage</h3>
-                    <p data-i18n="how.step2.desc">The cipher code is split, encoded, and stored as token descriptions on Ergo blockchain</p>
-                </div>
-                <div class="process-item">
-                    <div class="process-number">3</div>
-                    <h3 data-i18n="how.step3.title">Decentralized Access</h3>
-                    <p data-i18n="how.step3.desc">Retrieve the complete script anytime from the blockchain - no servers needed</p>
-                </div>
-                <div class="process-item">
-                    <div class="process-number">4</div>
-                    <h3 data-i18n="how.step4.title">Local Execution</h3>
-                    <p data-i18n="how.step4.desc">Run the script locally on your machine for maximum security and privacy</p>
-                </div>
-            </div>
-
-            <div class="tech-details">
-                <h3 data-i18n="how.tech.title">Technical Details</h3>
-                <ul class="tech-list">
-                    <li data-i18n="how.tech.item1">✓ Pure Bash implementation - no external dependencies</li>
-                    <li data-i18n="how.tech.item2">✓ BIP39 checksum validation and preservation</li>
-                    <li data-i18n="how.tech.item3">✓ Iterative key strengthening for enhanced security</li>
-                    <li data-i18n="how.tech.item4">✓ Memory-secure operations with sensitive data cleanup</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- Download Section -->
-    <section id="download" class="section section-alt">
-        <div class="container">
-            <h2 class="section-title" data-i18n="download.title">Download Scypher</h2>
-            <p class="section-subtitle" data-i18n="download.subtitle">
-                Retrieve the cipher script directly from Ergo blockchain
-            </p>
-
-            <div class="download-container">
-                <div class="download-box">
-                    <h3 data-i18n="download.blockchain.title">Download from Blockchain</h3>
-                    <p data-i18n="download.blockchain.desc">
-                        Click below to fetch the script fragments from Ergo blockchain and reconstruct the original scypher.sh file
-                    </p>
-                    <button id="downloadBtn" class="btn btn-primary btn-large">
-                        <span class="btn-icon">⬇️</span>
-                        <span data-i18n="download.blockchain.button">Fetch from Blockchain</span>
-                    </button>
-                    <div id="downloadStatus" class="download-status"></div>
-                </div>
-
-                <div class="download-info">
-                    <h4 data-i18n="download.info.title">What happens when you download?</h4>
-                    <ol class="download-steps">
-                        <li data-i18n="download.info.step1">Fetches token data from Ergo blockchain API</li>
-                        <li data-i18n="download.info.step2">Combines base64 encoded fragments</li>
-                        <li data-i18n="download.info.step3">Decodes and decompresses the data</li>
-                        <li data-i18n="download.info.step4">Delivers the original scypher.sh script</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="github-links">
-                <a href="https://github.com/[PLACEHOLDER]/scypher" class="github-link" target="_blank">
-                    <span class="github-icon">📦</span>
-                    <span data-i18n="download.github.scypher">Scypher Repository</span>
-                </a>
-                <a href="https://github.com/[PLACEHOLDER]/scypher-web" class="github-link" target="_blank">
-                    <span class="github-icon">🌐</span>
-                    <span data-i18n="download.github.web">Website Repository</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Donate Section -->
-    <section id="donate" class="section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="donate.title">Support Development</h2>
-            <p class="section-subtitle" data-i18n="donate.subtitle">
-                Help us maintain and improve Scypher with a secure donation
-            </p>
-
-            <div class="donate-container">
-                <div class="donate-box">
-                    <div class="token-safe-badge">
-                        <span class="badge-icon">🛡️</span>
-                        <span data-i18n="donate.tokenSafe">Token-Safe Donations</span>
-                    </div>
-                    <p class="donate-info" data-i18n="donate.info">
-                        Our donation system automatically preserves all tokens in your UTXOs. Your NFTs and tokens are completely safe.
-                    </p>
-
-                    <div id="walletStatus" class="wallet-status">
-                        <span class="status-icon">🔍</span>
-                        <span class="status-text" data-i18n="donate.detecting">Detecting Nautilus Wallet...</span>
-                    </div>
-
-                    <div class="donation-amount">
-                        <label data-i18n="donate.selectAmount">Select donation amount (ERG):</label>
-                        <div class="amount-grid">
-                            <button class="amount-btn" data-amount="1">1 ERG</button>
-                            <button class="amount-btn" data-amount="5">5 ERG</button>
-                            <button class="amount-btn" data-amount="10">10 ERG</button>
-                        </div>
-                        <input type="number" id="customAmount" class="custom-amount" placeholder="Custom amount" min="0.001" step="0.001">
-                    </div>
-
-                    <div class="donation-address">
-                        <label data-i18n="donate.address">Donation Address:</label>
-                        <code>9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY</code>
-                    </div>
-
-                    <button id="connectWalletBtn" class="btn btn-primary" disabled>
-                        <span data-i18n="donate.connectBtn">Connect Nautilus Wallet</span>
-                    </button>
-
-                    <button id="donateBtn" class="btn btn-success" disabled>
-                        <span data-i18n="donate.donateBtn">Make Secure Donation</span>
-                    </button>
-
-                    <div id="donationStatus" class="donation-status"></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="section section-alt">
-        <div class="container">
-            <h2 class="section-title" data-i18n="contact.title">Contact & Resources</h2>
-
-            <div class="contact-grid">
-                <div class="contact-item">
-                    <h3 data-i18n="contact.community">Community</h3>
-                    <p data-i18n="contact.communityDesc">Join our community for support and discussions</p>
-                    <a href="#" class="contact-link">Discord</a>
-                    <a href="#" class="contact-link">Telegram</a>
-                </div>
-                <div class="contact-item">
-                    <h3 data-i18n="contact.development">Development</h3>
-                    <p data-i18n="contact.developmentDesc">Contribute to the project or report issues</p>
-                    <a href="https://github.com/[PLACEHOLDER]/scypher" class="contact-link">GitHub</a>
-                    <a href="#" class="contact-link">Documentation</a>
-                </div>
-                <div class="contact-item">
-                    <h3 data-i18n="contact.security">Security</h3>
-                    <p data-i18n="contact.securityDesc">Report security vulnerabilities responsibly</p>
-                    <a href="#" class="contact-link">Security Policy</a>
-                    <a href="#" class="contact-link">Bug Bounty</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <span class="logo">🔐</span>
-                    <span class="brand-name">Scypher</span>
-                </div>
-                <p class="footer-text" data-i18n="footer.text">
-                    Open source BIP39 seed cipher stored on Ergo blockchain
-                </p>
-                <p class="footer-copyright">
-                    © 2024 Scypher. MIT License.
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts - ORDEN IMPORTANTE -->
-    <script src="js/translations.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/download.js"></script>
-    <script type="module" src="js/donation.js"></script>
-</body>
-</html>
+    </div>
+</section>
