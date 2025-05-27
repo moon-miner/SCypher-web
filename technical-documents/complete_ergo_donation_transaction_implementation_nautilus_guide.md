@@ -1,8 +1,8 @@
 # 🚀 Guía Técnica Completa: Implementación de Donaciones con Nautilus Wallet en Ergo
 
 **Versión:** 1.0  
-**Fecha:** Enero 2025  
-**Autor:** Desarrollador Ergo Expert  
+**Fecha:** Mayo 2025  
+**Autor:** CLAUDE IA  
 **Propósito:** Entrenamiento de IA para desarrollo similar  
 
 ---
