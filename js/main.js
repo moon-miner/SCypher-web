@@ -1,11 +1,16 @@
 // main.js - Main functionality for Scypher website
+// Versión 2.0 - Con Sistema de Themes Dark/Light
 
-// Current language
+// Current language and theme
 let currentLang = 'en';
+let currentTheme = 'dark'; // DARK MODE POR DEFECTO
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Scypher website loading...');
+
+    // Initialize theme FIRST (before language to avoid flashing)
+    initializeTheme();
 
     // Initialize language
     initializeLanguage();
@@ -20,9 +25,166 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
 
     console.log('✅ Website initialized successfully');
+    console.log(`🎨 Current theme: ${currentTheme}`);
+    console.log(`🌐 Current language: ${currentLang}`);
 });
 
-// Language initialization and switching
+// ========================================
+// THEME SYSTEM - NUEVO COMPLETO
+// ========================================
+
+function initializeTheme() {
+    console.log('🎨 Initializing theme system...');
+
+    // Check for saved theme preference, default to 'dark'
+    const savedTheme = localStorage.getItem('scypher-theme');
+    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+        currentTheme = savedTheme;
+        console.log('💾 Using saved theme:', currentTheme);
+    } else {
+        // Check user preference, but default to dark
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        currentTheme = prefersDark ? 'dark' : 'dark'; // Always default to dark for now
+        console.log('🌙 Using default theme: dark');
+    }
+
+    // Apply theme immediately to prevent flash
+    applyTheme(currentTheme);
+
+    // Setup theme toggle
+    setupThemeToggle();
+
+    // Listen for system theme changes (optional)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        console.log('🔄 System theme changed to:', e.matches ? 'dark' : 'light');
+        // Don't auto-switch if user has manually set a preference
+        if (!localStorage.getItem('scypher-theme')) {
+            // Keep dark as default even if system changes
+            // applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
+    console.log('✅ Theme system initialized');
+}
+
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) {
+        console.warn('⚠️ Theme toggle element not found');
+        return;
+    }
+
+    // Setup click handlers for theme options
+    const themeOptions = themeToggle.querySelectorAll('.theme-option');
+    themeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const selectedTheme = this.getAttribute('data-theme');
+            if (selectedTheme && selectedTheme !== currentTheme) {
+                console.log('🔄 Theme switch requested:', currentTheme, '->', selectedTheme);
+                switchTheme(selectedTheme);
+            }
+        });
+    });
+
+    // Setup keyboard navigation
+    themeToggle.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            switchTheme(newTheme);
+        }
+    });
+
+    // Make toggle focusable
+    themeToggle.setAttribute('tabindex', '0');
+    themeToggle.setAttribute('role', 'button');
+    themeToggle.setAttribute('aria-label', 'Toggle between dark and light themes');
+
+    console.log('✅ Theme toggle setup complete');
+}
+
+function switchTheme(newTheme) {
+    if (newTheme === currentTheme) return;
+
+    console.log('🎨 Switching theme:', currentTheme, '->', newTheme);
+
+    // Show loading state briefly
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.style.opacity = '0.7';
+    }
+
+    // Apply new theme
+    currentTheme = newTheme;
+    applyTheme(currentTheme);
+
+    // Save preference
+    localStorage.setItem('scypher-theme', currentTheme);
+
+    // Restore toggle appearance
+    setTimeout(() => {
+        if (themeToggle) {
+            themeToggle.style.opacity = '1';
+        }
+    }, 150);
+
+    console.log('✅ Theme switched successfully to:', currentTheme);
+}
+
+function applyTheme(theme) {
+    console.log('🎨 Applying theme:', theme);
+
+    // Set theme attribute on document root
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // Update toggle UI
+    updateThemeToggleUI(theme);
+
+    // Dispatch custom event for other components
+    const themeChangeEvent = new CustomEvent('themeChange', {
+        detail: { theme: theme }
+    });
+    document.dispatchEvent(themeChangeEvent);
+
+    console.log('✅ Theme applied:', theme);
+}
+
+function updateThemeToggleUI(theme) {
+    const themeOptions = document.querySelectorAll('.theme-option');
+    if (themeOptions.length === 0) {
+        console.warn('⚠️ Theme options not found for UI update');
+        return;
+    }
+
+    themeOptions.forEach(option => {
+        const optionTheme = option.getAttribute('data-theme');
+        if (optionTheme === theme) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
+
+    // Update toggle aria-label
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        const currentModeText = theme === 'dark' ? 'Dark' : 'Light';
+        const nextModeText = theme === 'dark' ? 'Light' : 'Dark';
+        themeToggle.setAttribute('aria-label', `Current theme: ${currentModeText}. Click to switch to ${nextModeText} mode`);
+    }
+
+    console.log('🎨 Theme toggle UI updated for:', theme);
+}
+
+// Function to get current theme (for use by other scripts)
+function getCurrentTheme() {
+    return currentTheme;
+}
+
+// ========================================
+// LANGUAGE SYSTEM (PRESERVED)
+// ========================================
+
 function initializeLanguage() {
     console.log('🌐 Initializing language system...');
 
@@ -54,7 +216,6 @@ function initializeLanguage() {
     applyTranslations();
 }
 
-// Handle language change
 function handleLanguageChange(e) {
     console.log('🔄 Changing language to:', e.target.value);
     currentLang = e.target.value;
@@ -62,7 +223,6 @@ function handleLanguageChange(e) {
     applyTranslations();
 }
 
-// Apply translations to all elements
 function applyTranslations() {
     if (!translations || !translations[currentLang]) {
         console.warn('⚠️ Translations not available for language:', currentLang);
@@ -83,7 +243,6 @@ function applyTranslations() {
     console.log('✅ Translations applied');
 }
 
-// Get translation by key path
 function getTranslation(keyPath) {
     if (!translations || !translations[currentLang]) {
         return keyPath;
@@ -112,7 +271,10 @@ function getTranslation(keyPath) {
     return value;
 }
 
-// Setup navigation active states
+// ========================================
+// NAVIGATION SYSTEM (PRESERVED)
+// ========================================
+
 function setupNavigation() {
     console.log('🧭 Setting up navigation...');
 
@@ -160,7 +322,10 @@ function setupNavigation() {
     console.log('✅ Navigation setup complete');
 }
 
-// Setup smooth scrolling
+// ========================================
+// SMOOTH SCROLLING (PRESERVED)
+// ========================================
+
 function setupSmoothScroll() {
     console.log('📜 Setting up smooth scrolling...');
 
@@ -198,7 +363,10 @@ function setupSmoothScroll() {
     console.log('✅ Smooth scrolling setup complete');
 }
 
-// Setup mobile menu
+// ========================================
+// MOBILE MENU (PRESERVED + THEME SUPPORT)
+// ========================================
+
 function setupMobileMenu() {
     console.log('📱 Setting up mobile menu...');
 
@@ -213,7 +381,13 @@ function setupMobileMenu() {
     navToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         navMenu.classList.toggle('active');
-        console.log('🔄 Mobile menu toggled:', navMenu.classList.contains('active') ? 'open' : 'closed');
+
+        // Update aria attributes for accessibility
+        const isOpen = navMenu.classList.contains('active');
+        navToggle.setAttribute('aria-expanded', isOpen);
+        navMenu.setAttribute('aria-hidden', !isOpen);
+
+        console.log('🔄 Mobile menu toggled:', isOpen ? 'open' : 'closed');
     });
 
     // Close menu when clicking outside
@@ -221,6 +395,8 @@ function setupMobileMenu() {
         if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
             if (navMenu.classList.contains('active')) {
                 navMenu.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navMenu.setAttribute('aria-hidden', 'true');
                 console.log('📱 Mobile menu closed (click outside)');
             }
         }
@@ -232,15 +408,37 @@ function setupMobileMenu() {
         link.addEventListener('click', () => {
             if (navMenu.classList.contains('active')) {
                 navMenu.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navMenu.setAttribute('aria-hidden', 'true');
                 console.log('📱 Mobile menu closed (link clicked)');
             }
         });
     });
 
+    // Close menu on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navMenu.setAttribute('aria-hidden', 'true');
+            navToggle.focus(); // Return focus to toggle button
+            console.log('📱 Mobile menu closed (escape key)');
+        }
+    });
+
+    // Set initial aria attributes
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-controls', 'nav-menu');
+    navMenu.setAttribute('aria-hidden', 'true');
+    navMenu.setAttribute('id', 'nav-menu');
+
     console.log('✅ Mobile menu setup complete');
 }
 
-// Utility function to show status messages
+// ========================================
+// UTILITY FUNCTIONS (PRESERVED + ENHANCED)
+// ========================================
+
 function showStatus(elementId, message, type = 'info') {
     const statusElement = document.getElementById(elementId);
     if (statusElement) {
@@ -261,30 +459,96 @@ function showStatus(elementId, message, type = 'info') {
     }
 }
 
-// Utility function to create loading spinner
 function createLoadingSpinner() {
     const spinner = document.createElement('div');
     spinner.className = 'loading';
     return spinner;
 }
 
-// Error handling for uncaught errors
+// ========================================
+// ERROR HANDLING (ENHANCED)
+// ========================================
+
 window.addEventListener('error', function(e) {
     console.error('❌ Uncaught error:', e.error);
     console.error('📍 Error location:', e.filename, 'line', e.lineno);
 });
 
-// Unhandled promise rejection handling
 window.addEventListener('unhandledrejection', function(e) {
     console.error('❌ Unhandled promise rejection:', e.reason);
     e.preventDefault(); // Prevent default browser error handling
 });
 
-// Export functions for use in other scripts
+// ========================================
+// THEME CHANGE LISTENER FOR OTHER COMPONENTS
+// ========================================
+
+document.addEventListener('themeChange', function(e) {
+    console.log('🎨 Theme change event received:', e.detail.theme);
+
+    // Notify other components if needed
+    // This can be used by donation.js, download.js etc. if they need theme info
+
+    // Example: Update any theme-dependent elements
+    const themeIndicator = document.querySelector('.demo-indicator');
+    if (themeIndicator) {
+        themeIndicator.textContent = `${e.detail.theme === 'dark' ? '🌙' : '☀️'} ${e.detail.theme.toUpperCase()} MODE`;
+    }
+});
+
+// ========================================
+// ACCESSIBILITY ENHANCEMENTS
+// ========================================
+
+// Focus management for theme toggle
+document.addEventListener('keydown', function(e) {
+    // Alt + T to toggle theme (keyboard shortcut)
+    if (e.altKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        switchTheme(newTheme);
+
+        // Announce to screen readers
+        const announcement = `Theme switched to ${newTheme} mode`;
+        announceToScreenReader(announcement);
+    }
+});
+
+function announceToScreenReader(message) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.style.position = 'absolute';
+    announcement.style.left = '-10000px';
+    announcement.style.width = '1px';
+    announcement.style.height = '1px';
+    announcement.style.overflow = 'hidden';
+
+    document.body.appendChild(announcement);
+    announcement.textContent = message;
+
+    setTimeout(() => {
+        document.body.removeChild(announcement);
+    }, 1000);
+}
+
+// ========================================
+// EXPORT FUNCTIONS FOR OTHER SCRIPTS
+// ========================================
+
 if (typeof window !== 'undefined') {
     window.scypherMain = {
         showStatus,
         getTranslation,
-        createLoadingSpinner
+        createLoadingSpinner,
+        getCurrentTheme,
+        switchTheme,
+        applyTheme
     };
+
+    // Make theme functions globally available
+    window.getCurrentTheme = getCurrentTheme;
+    window.switchTheme = switchTheme;
+
+    console.log('✅ Global functions exported');
 }
