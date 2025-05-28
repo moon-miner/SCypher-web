@@ -592,7 +592,7 @@ function getTranslation(key) {
         'donate.walletReady': 'Nautilus Wallet detected - Ready to connect',
         'donate.connectBtn': 'Connect Nautilus Wallet',
         'donate.detecting': 'Detecting Nautilus Wallet...',
-        'donate.donateBtn': 'Make Secure Donation'
+        'donate.donateBtn': 'Donate'
     };
 
     return fallbacks[key] || key;
