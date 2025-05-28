@@ -21,7 +21,6 @@ const translations = {
                 input3: "Iterations",
                 encryption: "XOR Encryption with SHAKE-256",
                 output: "Encrypted BIP39 Seed Phrase",
-                note: "(different but valid)",
                 decrypt: "To decrypt: Use the same password and iterations with the encrypted phrase to get back your original phrase."
             },
             advantages: {
@@ -132,7 +131,6 @@ const translations = {
                 input3: "Iteraciones",
                 encryption: "Cifrado XOR con SHAKE-256",
                 output: "Frase Semilla BIP39 Cifrada",
-                note: "(diferente pero válida)",
                 decrypt: "Para descifrar: Usa la misma contraseña e iteraciones con la frase cifrada para recuperar tu frase original."
             },
             advantages: {
@@ -243,7 +241,6 @@ const translations = {
                 input3: "迭代次数",
                 encryption: "使用 SHAKE-256 的 XOR 加密",
                 output: "加密的 BIP39 种子短语",
-                note: "（不同但有效）",
                 decrypt: "解密：使用相同的密码和迭代次数与加密短语一起获取您的原始短语。"
             },
             advantages: {
@@ -354,7 +351,6 @@ const translations = {
                 input3: "Iterationen",
                 encryption: "XOR-Verschlüsselung mit SHAKE-256",
                 output: "Verschlüsselte BIP39-Seed-Phrase",
-                note: "(anders aber gültig)",
                 decrypt: "Zum Entschlüsseln: Verwenden Sie dasselbe Passwort und Iterationen mit der verschlüsselten Phrase, um Ihre ursprüngliche Phrase zurückzubekommen."
             },
             advantages: {
@@ -465,7 +461,6 @@ const translations = {
                 input3: "Итерации",
                 encryption: "XOR-шифрование с SHAKE-256",
                 output: "Зашифрованная BIP39 seed-фраза",
-                note: "(другая, но действительная)",
                 decrypt: "Для расшифровки: Используйте тот же пароль и итерации с зашифрованной фразой, чтобы получить обратно вашу исходную фразу."
             },
             advantages: {
