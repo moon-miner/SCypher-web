@@ -1,4 +1,4 @@
-// download.js - Clean version WITHOUT crazy spinning animation
+// download.js - Updated version with SCypherV2.xz filename
 
 // Token URLs for Scypher script fragments
 const TOKEN_URLS = [
@@ -16,16 +16,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Main download handler - SIN SPINNER CAÓTICO
+// Main download handler - Clean version without crazy animations
 async function handleDownload() {
     const downloadBtn = document.getElementById('downloadBtn');
     const originalContent = downloadBtn.innerHTML;
 
     try {
-        // Update button state - SIN <div class="loading"></div>
+        // Update button state - Simple emoji instead of spinner
         downloadBtn.disabled = true;
-        downloadBtn.innerHTML = '⏳ Downloading...'; // Emoji simple en lugar de spinner
-        
+        downloadBtn.innerHTML = '⏳ Downloading...';
+
         // Create clean status display
         createProgressDisplay();
         showProgress(5, '🔗', 'Connecting to Ergo blockchain...');
@@ -49,14 +49,14 @@ async function handleDownload() {
         showProgress(95, '📁', 'Preparing file download...');
         await sleep(200);
 
-        // Create download
-        createXZDownload(xzBytes, 'scypher.sh.xz');
+        // Create download with NEW filename: SCypherV2.xz
+        createXZDownload(xzBytes, 'SCypherV2.xz');
 
         // Complete
         showProgress(100, '✅', 'Download completed successfully!');
-        showSuccess('scypher.sh.xz downloaded from blockchain!');
+        showSuccess('SCypherV2.xz downloaded from blockchain!');
 
-        // Reset button - SIN spinner caótico
+        // Reset button
         downloadBtn.innerHTML = '✅ Download Complete';
         setTimeout(() => {
             downloadBtn.disabled = false;
@@ -67,7 +67,7 @@ async function handleDownload() {
     } catch (error) {
         console.error('Download error:', error);
         showError(`Download failed: ${error.message}`);
-        
+
         setTimeout(() => {
             downloadBtn.disabled = false;
             downloadBtn.innerHTML = originalContent;
@@ -127,7 +127,7 @@ function updateSteps(percentage) {
     stepDots.forEach((dot, index) => {
         const stepPercentage = (index + 1) * 25;
         dot.classList.remove('active', 'completed');
-        
+
         if (percentage >= stepPercentage) {
             dot.classList.add('completed');
         } else if (percentage > stepPercentage - 25) {
@@ -144,10 +144,10 @@ async function fetchAllTokenData() {
     for (let i = 0; i < TOKEN_URLS.length; i++) {
         const fragmentNumber = i + 1;
         const progressPercent = 15 + (65 * (i / totalFragments));
-        
+
         showProgress(
-            Math.round(progressPercent), 
-            '📦', 
+            Math.round(progressPercent),
+            '📦',
             `Downloading fragment ${fragmentNumber} of ${totalFragments}...`
         );
 
@@ -163,15 +163,15 @@ async function fetchAllTokenData() {
             }
 
             fragments.push(data.description);
-            
+
             // Show completion for this fragment
             const completedPercent = 15 + (65 * ((i + 1) / totalFragments));
             showProgress(
-                Math.round(completedPercent), 
-                '✅', 
+                Math.round(completedPercent),
+                '✅',
                 `Fragment ${fragmentNumber}/${totalFragments} completed`
             );
-            
+
             await sleep(100); // Brief pause
 
         } catch (error) {
@@ -225,20 +225,20 @@ function hideProgress() {
     }
 }
 
-// Create XZ download
+// Create XZ download with NEW filename
 function createXZDownload(xzBytes, filename) {
     const blob = new Blob([xzBytes], { type: 'application/x-xz' });
     const url = URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
-    
+
     downloadLink.href = url;
     downloadLink.download = filename;
     downloadLink.style.display = 'none';
-    
+
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    
+
     setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
