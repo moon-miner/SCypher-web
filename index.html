@@ -23,7 +23,6 @@
                 <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
                 <li><a href="#download" class="nav-link">Download</a></li>
                 <li><a href="#donate" class="nav-link">Donate</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
                 <li class="nav-lang">
                     <select id="langSelect" class="lang-select">
                         <option value="en">EN</option>
@@ -72,44 +71,90 @@
         </div>
     </section>
 
-    <!-- How It Works Section -->
+    <!-- How It Works Section - COMPLETELY REDESIGNED -->
     <section id="how-it-works" class="section">
         <div class="container">
             <h2 class="section-title" data-i18n="how.title">How Scypher Works</h2>
             <p class="section-subtitle" data-i18n="how.subtitle">
-                A revolutionary approach to seed phrase security using XOR encryption and blockchain storage
+                A simple yet powerful encryption system that transforms your BIP39 seed phrase into another valid BIP39 phrase
             </p>
 
-            <div class="process-grid">
-                <div class="process-item">
-                    <div class="process-number">1</div>
-                    <h3 data-i18n="how.step1.title">XOR Encryption</h3>
-                    <p data-i18n="how.step1.desc">Your BIP39 seed phrase is encrypted using XOR cipher with SHAKE-256 key derivation</p>
+            <!-- Process Explanation -->
+            <div class="process-explanation">
+                <div class="process-flow">
+                    <h3 class="process-flow-title" data-i18n="how.process.title">The Encryption Process</h3>
+
+                    <div class="flow-step">
+                        <div class="flow-input">
+                            <span class="flow-label" data-i18n="how.process.input1">Your Original BIP39 Seed</span>
+                            <span class="flow-plus">+</span>
+                            <span class="flow-label" data-i18n="how.process.input2">Password</span>
+                            <span class="flow-plus">+</span>
+                            <span class="flow-label" data-i18n="how.process.input3">Iterations</span>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+                    <div class="flow-step">
+                        <div class="flow-process">
+                            <span class="flow-label-highlight" data-i18n="how.process.encryption">XOR Encryption with SHAKE-256</span>
+                        </div>
+                    </div>
+
+                    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+                    <div class="flow-step">
+                        <div class="flow-output">
+                            <span class="flow-label" data-i18n="how.process.output">Encrypted BIP39 Seed Phrase</span>
+                            <span class="flow-note" data-i18n="how.process.note">(different but valid)</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="process-item">
-                    <div class="process-number">2</div>
-                    <h3 data-i18n="how.step2.title">Blockchain Storage</h3>
-                    <p data-i18n="how.step2.desc">The cipher code is split, encoded, and stored as token descriptions on Ergo blockchain</p>
-                </div>
-                <div class="process-item">
-                    <div class="process-number">3</div>
-                    <h3 data-i18n="how.step3.title">Decentralized Access</h3>
-                    <p data-i18n="how.step3.desc">Retrieve the complete script anytime from the blockchain - no servers needed</p>
-                </div>
-                <div class="process-item">
-                    <div class="process-number">4</div>
-                    <h3 data-i18n="how.step4.title">Local Execution</h3>
-                    <p data-i18n="how.step4.desc">Run the script locally on your machine for maximum security and privacy</p>
+
+                <div class="decrypt-info">
+                    <p data-i18n="how.process.decrypt">
+                        <strong>To decrypt:</strong> Use the same password and iterations with the encrypted phrase to get back your original phrase.
+                    </p>
                 </div>
             </div>
 
+            <!-- Advantages Grid -->
+            <div class="advantages-grid">
+                <div class="advantage-card">
+                    <div class="advantage-icon">🔒</div>
+                    <h3 class="advantage-title" data-i18n="how.advantages.security.title">Blockchain Security</h3>
+                    <p class="advantage-description" data-i18n="how.advantages.security.desc">
+                        The decryption tool is permanently stored on Ergo blockchain. Cannot be altered, lost, or censored.
+                    </p>
+                </div>
+
+                <div class="advantage-card">
+                    <div class="advantage-icon">⚡</div>
+                    <h3 class="advantage-title" data-i18n="how.advantages.availability.title">Always Available</h3>
+                    <p class="advantage-description" data-i18n="how.advantages.availability.desc">
+                        Download anytime from the blockchain. No central servers or third parties required.
+                    </p>
+                </div>
+
+                <div class="advantage-card">
+                    <div class="advantage-icon">🎯</div>
+                    <h3 class="advantage-title" data-i18n="how.advantages.deterministic.title">Deterministic</h3>
+                    <p class="advantage-description" data-i18n="how.advantages.deterministic.desc">
+                        Same password and iterations always produce the same result. Fully predictable and reliable.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Technical Details -->
             <div class="tech-details">
-                <h3 data-i18n="how.tech.title">Technical Details</h3>
+                <h3 class="tech-title" data-i18n="how.tech.title">Technical Details</h3>
                 <ul class="tech-list">
-                    <li data-i18n="how.tech.item1">✓ Pure Bash implementation - no external dependencies</li>
-                    <li data-i18n="how.tech.item2">✓ BIP39 checksum validation and preservation</li>
-                    <li data-i18n="how.tech.item3">✓ Iterative key strengthening for enhanced security</li>
-                    <li data-i18n="how.tech.item4">✓ Memory-secure operations with sensitive data cleanup</li>
+                    <li data-i18n="how.tech.item1">Pure XOR encryption maintains BIP39 validity</li>
+                    <li data-i18n="how.tech.item2">SHAKE-256 provides cryptographic security</li>
+                    <li data-i18n="how.tech.item3">Iterative key strengthening for enhanced protection</li>
+                    <li data-i18n="how.tech.item4">Memory-secure operations with sensitive data cleanup</li>
+                    <li data-i18n="how.tech.item5">Cross-platform Bash implementation</li>
                 </ul>
             </div>
         </div>
@@ -127,7 +172,7 @@
                 <div class="download-box">
                     <h3 data-i18n="download.blockchain.title">Download from Blockchain</h3>
                     <p data-i18n="download.blockchain.desc">
-                        Click below to fetch the script fragments from Ergo blockchain and reconstruct the original scypher.sh.xz file
+                        Click below to fetch the script fragments from Ergo blockchain and reconstruct the original SCypherV2.xz file
                     </p>
                     <button id="downloadBtn" class="btn btn-primary btn-large">
                         <span class="btn-icon">⬇️</span>
@@ -142,35 +187,53 @@
                         <li data-i18n="download.info.step1">Fetches token data from Ergo blockchain API</li>
                         <li data-i18n="download.info.step2">Combines base64 encoded fragments</li>
                         <li data-i18n="download.info.step3">Reconstructs the compressed XZ archive</li>
-                        <li data-i18n="download.info.step4">Delivers the original scypher.sh.xz file</li>
+                        <li data-i18n="download.info.step4">Delivers the original SCypherV2.xz file</li>
                     </ol>
 
                     <div class="download-note">
-                        <h5>📦 About the XZ format</h5>
-                        <p>The downloaded file is compressed with XZ for efficient storage on the blockchain. Extract it using:</p>
-                        <pre><code>xz -d scypher.sh.xz</code></pre>
-                        <p>This ensures maximum decentralization while maintaining small blockchain footprint.</p>
+                        <h5>📦 <span data-i18n="download.extraction.title">How to Extract SCypherV2.xz</span></h5>
+                        <p data-i18n="download.extraction.desc">The downloaded file is compressed with XZ format. Extract using:</p>
+
+                        <div class="os-instructions">
+                            <div class="os-item">
+                                <div class="os-icon">🐧</div>
+                                <div class="os-name">Linux</div>
+                                <div class="os-command">xz -d SCypherV2.xz</div>
+                            </div>
+                            <div class="os-item">
+                                <div class="os-icon">🍎</div>
+                                <div class="os-name">macOS</div>
+                                <div class="os-command">xz -d SCypherV2.xz</div>
+                            </div>
+                            <div class="os-item">
+                                <div class="os-icon">🪟</div>
+                                <div class="os-name">Windows</div>
+                                <div class="os-command" data-i18n="download.extraction.windows">Use WinRAR, 7-Zip or similar</div>
+                            </div>
+                        </div>
+
+                        <p data-i18n="download.extraction.note">This ensures maximum decentralization while maintaining small blockchain footprint.</p>
                     </div>
                 </div>
             </div>
 
             <div class="blockchain-transparency">
-                <h3>🔍 Blockchain Transparency</h3>
-                <p>Every download is completely transparent and verifiable:</p>
+                <h3>🔍 <span data-i18n="download.transparency.title">Blockchain Transparency</span></h3>
+                <p data-i18n="download.transparency.desc">Every download is completely transparent and verifiable:</p>
                 <ul class="transparency-list">
-                    <li>✅ All script fragments are publicly stored on Ergo blockchain</li>
-                    <li>✅ No central servers - direct blockchain access</li>
-                    <li>✅ Immutable storage ensures script integrity</li>
-                    <li>✅ Open source verification of the reconstruction process</li>
+                    <li data-i18n="download.transparency.item1">✅ All script fragments are publicly stored on Ergo blockchain</li>
+                    <li data-i18n="download.transparency.item2">✅ No central servers - direct blockchain access</li>
+                    <li data-i18n="download.transparency.item3">✅ Immutable storage ensures script integrity</li>
+                    <li data-i18n="download.transparency.item4">✅ Open source verification of the reconstruction process</li>
                 </ul>
             </div>
 
             <div class="github-links">
-                <a href="https://github.com/[PLACEHOLDER]/scypher" class="github-link" target="_blank">
+                <a href="https://github.com/moon-miner/bash-BIP39-seed-cypher" class="github-link" target="_blank">
                     <span class="github-icon">📦</span>
                     <span data-i18n="download.github.scypher">Scypher Repository</span>
                 </a>
-                <a href="https://github.com/[PLACEHOLDER]/scypher-web" class="github-link" target="_blank">
+                <a href="https://github.com/moon-miner/SCypher-web" class="github-link" target="_blank">
                     <span class="github-icon">🌐</span>
                     <span data-i18n="download.github.web">Website Repository</span>
                 </a>
@@ -221,38 +284,10 @@
                     </button>
 
                     <button id="donateBtn" class="btn btn-success" disabled>
-                        <span data-i18n="donate.donateBtn">Make Secure Donation</span>
+                        <span data-i18n="donate.donateBtn">Donate</span>
                     </button>
 
                     <div id="donationStatus" class="donation-status"></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="section section-alt">
-        <div class="container">
-            <h2 class="section-title" data-i18n="contact.title">Contact & Resources</h2>
-
-            <div class="contact-grid">
-                <div class="contact-item">
-                    <h3 data-i18n="contact.community">Community</h3>
-                    <p data-i18n="contact.communityDesc">Join our community for support and discussions</p>
-                    <a href="#" class="contact-link">Discord</a>
-                    <a href="#" class="contact-link">Telegram</a>
-                </div>
-                <div class="contact-item">
-                    <h3 data-i18n="contact.development">Development</h3>
-                    <p data-i18n="contact.developmentDesc">Contribute to the project or report issues</p>
-                    <a href="https://github.com/[PLACEHOLDER]/scypher" class="contact-link">GitHub</a>
-                    <a href="#" class="contact-link">Documentation</a>
-                </div>
-                <div class="contact-item">
-                    <h3 data-i18n="contact.security">Security</h3>
-                    <p data-i18n="contact.securityDesc">Report security vulnerabilities responsibly</p>
-                    <a href="#" class="contact-link">Security Policy</a>
-                    <a href="#" class="contact-link">Bug Bounty</a>
                 </div>
             </div>
         </div>
