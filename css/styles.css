@@ -726,6 +726,7 @@ a:hover {
     padding: 3rem;
     border-radius: 1rem;
     box-shadow: var(--shadow-lg);
+    text-align: center;
 }
 
 .token-safe-badge {
@@ -820,6 +821,7 @@ a:hover {
     border-radius: 0.5rem;
     font-size: 1rem;
     transition: var(--transition);
+    text-align: center;
 }
 
 .custom-amount:focus {
@@ -1072,6 +1074,13 @@ a:hover {
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Donation buttons specific centering */
+#connectWalletBtn,
+#donateBtn {
+    width: 100%;
+    margin-bottom: 1rem;
 }
 
 /* ========================================= */
