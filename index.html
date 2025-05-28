@@ -23,7 +23,7 @@
                 <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
                 <li><a href="#download" class="nav-link">Download</a></li>
                 <li><a href="#donate" class="nav-link">Donate</a></li>
-                <!-- NUEVO: Theme Toggle -->
+                <!-- Theme Toggle -->
                 <li class="nav-theme">
                     <div class="theme-toggle" id="themeToggle">
                         <span class="theme-option active" data-theme="dark">🌙 Dark</span>
@@ -79,7 +79,7 @@
         </div>
     </section>
 
-    <!-- How It Works Section - COMPLETELY REDESIGNED -->
+    <!-- How It Works Section -->
     <section id="how-it-works" class="section">
         <div class="container">
             <h2 class="section-title" data-i18n="how.title">How Scypher Works</h2>
@@ -167,7 +167,7 @@
         </div>
     </section>
 
-    <!-- Download Section -->
+    <!-- Download Section - REORGANIZADA Y BALANCEADA -->
     <section id="download" class="section section-alt">
         <div class="container">
             <h2 class="section-title" data-i18n="download.title">Download Scypher</h2>
@@ -176,27 +176,35 @@
             </p>
 
             <div class="download-container">
-                <div class="download-box">
-                    <h3 data-i18n="download.blockchain.title">Download from Blockchain</h3>
-                    <p data-i18n="download.blockchain.desc">
-                        Click below to fetch the script fragments from Ergo blockchain and reconstruct the original SCypherV2.xz file
-                    </p>
-                    <button id="downloadBtn" class="btn btn-primary btn-large">
-                        <span class="btn-icon">⬇️</span>
-                        <span data-i18n="download.blockchain.button">Fetch from Blockchain</span>
-                    </button>
-                    <div id="downloadStatus" class="download-status"></div>
+                <!-- LADO IZQUIERDO: Proceso + Download Box -->
+                <div class="download-left">
+                    <!-- What happens when you download - MOVIDO AQUÍ -->
+                    <div class="download-process-info">
+                        <h4 data-i18n="download.info.title">What happens when you download?</h4>
+                        <ol class="download-steps">
+                            <li data-i18n="download.info.step1">Fetches token data from Ergo blockchain API</li>
+                            <li data-i18n="download.info.step2">Combines base64 encoded fragments</li>
+                            <li data-i18n="download.info.step3">Reconstructs the compressed XZ archive</li>
+                            <li data-i18n="download.info.step4">Delivers the original SCypherV2.xz file</li>
+                        </ol>
+                    </div>
+
+                    <!-- Download Box -->
+                    <div class="download-box">
+                        <h3 data-i18n="download.blockchain.title">Download from Blockchain</h3>
+                        <p data-i18n="download.blockchain.desc">
+                            Click below to fetch the script fragments from Ergo blockchain and reconstruct the original SCypherV2.xz file
+                        </p>
+                        <button id="downloadBtn" class="btn btn-primary btn-large">
+                            <span class="btn-icon">⬇️</span>
+                            <span data-i18n="download.blockchain.button">Fetch from Blockchain</span>
+                        </button>
+                        <div id="downloadStatus" class="download-status"></div>
+                    </div>
                 </div>
 
-                <div class="download-info">
-                    <h4 data-i18n="download.info.title">What happens when you download?</h4>
-                    <ol class="download-steps">
-                        <li data-i18n="download.info.step1">Fetches token data from Ergo blockchain API</li>
-                        <li data-i18n="download.info.step2">Combines base64 encoded fragments</li>
-                        <li data-i18n="download.info.step3">Reconstructs the compressed XZ archive</li>
-                        <li data-i18n="download.info.step4">Delivers the original SCypherV2.xz file</li>
-                    </ol>
-
+                <!-- LADO DERECHO: How to Extract -->
+                <div class="download-right">
                     <div class="download-note">
                         <h5>📦 <span data-i18n="download.extraction.title">How to Extract SCypherV2.xz</span></h5>
                         <p data-i18n="download.extraction.desc">The downloaded file is compressed with XZ format. Extract using:</p>
