@@ -1,8 +1,10 @@
-// donation.js - VERSIÓN CORREGIDA SIN ERRORES DE SCOPE
+// donation.js - COMPLETE CORRECT IMPLEMENTATION with proper fee handling
 
 // Configuration
 const DONATION_ADDRESS = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
 const NANOERGS_PER_ERG = 1000000000n;
+const MIN_FEE = 1000000n; // 0.001 ERG
+const FEE_ERGOTREE = "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304";
 
 // State
 let isWalletConnected = false;
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeDonation() {
     console.log('🚀 Initializing donation system...');
     console.log('💰 Donation address:', DONATION_ADDRESS);
-    console.log('🔧 Using manual implementation (Fleet SDK style)');
+    console.log('🔧 Using complete implementation with network fee');
 
     setupAmountSelection();
     setupWalletConnection();
@@ -146,7 +148,7 @@ async function connectWallet() {
         console.log('🔌 Connecting to Nautilus...');
 
         connectBtn.disabled = true;
-        connectBtn.innerHTML = '<div class="loading"></div> Connecting...';
+        connectBtn.innerHTML = 'Connecting...';
         showStatus('donationStatus', 'Connecting to Nautilus Wallet...', 'info');
 
         if (!nautilusConnector) {
@@ -208,28 +210,28 @@ function base58Decode(str) {
     }
 
     let decoded = [0];
-    
+
     for (let i = 0; i < str.length; i++) {
         let carry = ALPHABET_MAP[str[i]];
         if (carry === undefined) throw new Error('Invalid base58 character');
-        
+
         for (let j = 0; j < decoded.length; j++) {
             carry += decoded[j] * 58;
             decoded[j] = carry & 255;
             carry >>= 8;
         }
-        
+
         while (carry > 0) {
             decoded.push(carry & 255);
             carry >>= 8;
         }
     }
-    
+
     // Handle leading zeros
     for (let i = 0; i < str.length && str[i] === '1'; i++) {
         decoded.push(0);
     }
-    
+
     return new Uint8Array(decoded.reverse());
 }
 
@@ -240,7 +242,7 @@ function addressToErgoTree(address) {
     try {
         // Base58 decode
         const decoded = base58Decode(address);
-        
+
         // Verify P2PK format
         if (decoded.length < 34 || decoded[0] !== 0x01) {
             throw new Error(`Invalid P2PK address format`);
@@ -248,7 +250,7 @@ function addressToErgoTree(address) {
 
         // Extract public key (bytes 1-33)
         const publicKey = decoded.slice(1, 34);
-        const publicKeyHex = Array.from(publicKey, byte => 
+        const publicKeyHex = Array.from(publicKey, byte =>
             byte.toString(16).padStart(2, '0')
         ).join('');
 
@@ -263,40 +265,81 @@ function addressToErgoTree(address) {
 
     } catch (error) {
         console.error('❌ Address conversion failed:', error);
-        
+
         // Hardcoded fallback for donation address
         if (address === DONATION_ADDRESS) {
             console.log('🔧 Using hardcoded ErgoTree for donation address');
             return "0008cd027ecf12ead2d42ab4ede6d6faf6f1fb0f2af84ee66a1a8be2f426b6bc2a2cccd4b";
         }
-        
+
         throw new Error(`Cannot convert address: ${error.message}`);
     }
 }
 
-// Manual transaction building siguiendo EXACTAMENTE el patrón de Fleet SDK
+// Select inputs and collect tokens - CORRECT IMPLEMENTATION
+function selectInputsAndTokens(utxos, requiredAmount) {
+    console.log(`🎯 Selecting inputs to cover ${Number(requiredAmount) / Number(NANOERGS_PER_ERG)} ERG`);
+
+    // Sort UTXOs by value (highest first)
+    const sortedUtxos = [...utxos].sort((a, b) =>
+        Number(BigInt(b.value) - BigInt(a.value))
+    );
+
+    let selectedInputs = [];
+    let totalInputValue = 0n;
+    const allTokens = new Map();
+
+    for (const utxo of sortedUtxos) {
+        selectedInputs.push(utxo);
+        totalInputValue += BigInt(utxo.value);
+
+        // Collect all tokens from inputs
+        if (utxo.assets && utxo.assets.length > 0) {
+            utxo.assets.forEach(token => {
+                const existing = allTokens.get(token.tokenId) || 0n;
+                allTokens.set(token.tokenId, existing + BigInt(token.amount));
+            });
+        }
+
+        // We need to cover: donation + fee minimum
+        if (totalInputValue >= requiredAmount) break;
+    }
+
+    if (totalInputValue < requiredAmount) {
+        throw new Error(`Insufficient funds. Need ${Number(requiredAmount) / Number(NANOERGS_PER_ERG)} ERG but only have ${Number(totalInputValue) / Number(NANOERGS_PER_ERG)} ERG`);
+    }
+
+    console.log('📥 INPUTS SELECTED:');
+    console.log('  - UTXOs selected:', selectedInputs.length);
+    console.log('  - Total input value:', Number(totalInputValue) / Number(NANOERGS_PER_ERG), 'ERG');
+    console.log('  - Tokens in inputs:', allTokens.size);
+
+    return { selectedInputs, totalInputValue, allTokens };
+}
+
+// Manual transaction building following EXACT Fleet SDK pattern
 async function buildDonationTransaction(amount) {
     console.log('🔧 === BUILDING TRANSACTION (EXACT Fleet SDK Pattern) ===');
-    
-    const amountNanoErg = BigInt(Math.floor(amount * 1000000000));
-    
+
+    const amountNanoErg = BigInt(Math.floor(amount * Number(NANOERGS_PER_ERG)));
+
     try {
         // Get current height
         const currentHeight = await ergoApi.get_current_height();
         console.log('📊 Current height:', currentHeight);
 
-        // Get UTXOs - estos son nuestros inputs
+        // Get UTXOs - these are our inputs
         const utxos = await ergoApi.get_utxos();
         if (!utxos || utxos.length === 0) {
             throw new Error('No UTXOs available');
         }
         console.log('📦 Available UTXOs:', utxos.length);
 
-        // Fleet SDK recommended minimum fee - CORRECCIÓN: 0.001 ERG estándar
-        const RECOMMENDED_MIN_FEE = 1000000n; // 0.001 ERG (no 0.0011)
-        console.log('💰 Using Ergo standard minimum fee:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        // Fleet SDK recommended minimum fee - CORRECTION: 0.001 ERG standard
+        const RECOMMENDED_MIN_FEE = MIN_FEE; // 0.001 ERG
+        console.log('💰 Using Ergo standard minimum fee:', Number(RECOMMENDED_MIN_FEE) / Number(NANOERGS_PER_ERG), 'ERG');
 
-        // Get sender address from first UTXO (para change)
+        // Get sender address from first UTXO (for change)
         const senderErgoTree = utxos[0].ergoTree;
         console.log('👤 Sender ErgoTree (for change):', senderErgoTree);
 
@@ -304,75 +347,42 @@ async function buildDonationTransaction(amount) {
         const donationErgoTree = addressToErgoTree(DONATION_ADDRESS);
         console.log('🎯 Donation ErgoTree:', donationErgoTree);
 
-        // Verificar que las direcciones sean diferentes
+        // Verify that addresses are different
         if (donationErgoTree === senderErgoTree) {
             throw new Error('CRITICAL: Donation and sender addresses are the same!');
         }
 
-        // Calculate total needed para inputs (SIN incluir fee aquí)
-        const totalNeeded = amountNanoErg; // Solo la donación
-        console.log('📊 Amount needed for donation:', Number(totalNeeded) / 1000000000, 'ERG');
-        console.log('📊 Standard Ergo fee will be deducted:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        // Calculate total needed for inputs (WITHOUT including fee here)
+        const totalNeeded = amountNanoErg + RECOMMENDED_MIN_FEE; // Donation + fee
+        console.log('📊 Total needed (donation + fee):', Number(totalNeeded) / Number(NANOERGS_PER_ERG), 'ERG');
 
         // Select inputs (Fleet SDK BoxSelector logic)
-        let selectedInputs = [];
-        let totalInputValue = 0n;
-        const allTokens = new Map();
+        const { selectedInputs, totalInputValue, allTokens } = selectInputsAndTokens(utxos, totalNeeded);
 
-        // Ordenar UTXOs por valor (estrategia Fleet SDK)
-        const sortedUtxos = [...utxos].sort((a, b) => Number(BigInt(b.value) - BigInt(a.value)));
+        // ========== CORRECT CONSTRUCTION WITH SEPARATE FEE OUTPUT ==========
 
-        // Select inputs to cover donation + fee + change
-        for (const utxo of sortedUtxos) {
-            selectedInputs.push(utxo);
-            totalInputValue += BigInt(utxo.value);
-
-            // Collect all tokens from inputs
-            if (utxo.assets && utxo.assets.length > 0) {
-                utxo.assets.forEach(token => {
-                    const existing = allTokens.get(token.tokenId) || 0n;
-                    allTokens.set(token.tokenId, existing + BigInt(token.amount));
-                });
-            }
-
-            // Necesitamos cubrir: donación + fee mínimo
-            if (totalInputValue >= (amountNanoErg + RECOMMENDED_MIN_FEE)) break;
-        }
-
-        if (totalInputValue < (amountNanoErg + RECOMMENDED_MIN_FEE)) {
-            throw new Error(`Insufficient funds. Need ${Number(amountNanoErg + RECOMMENDED_MIN_FEE) / 1000000000} ERG but only have ${Number(totalInputValue) / 1000000000} ERG`);
-        }
-
-        console.log('📥 INPUTS SELECTED:');
-        console.log('  - UTXOs selected:', selectedInputs.length);
-        console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
-        console.log('  - Tokens in inputs:', allTokens.size);
-
-        // ========== CONSTRUCCIÓN CORRECTA CON FEE OUTPUT SEPARADO ==========
-        
         const outputs = [];
 
-        // OUTPUT 1: Donation (correcto)
+        // OUTPUT 1: Donation (correct)
         const donationOutput = {
             value: amountNanoErg.toString(),
             ergoTree: donationErgoTree,
-            assets: [], // No tokens en donation - pure ERG
+            assets: [], // No tokens in donation - pure ERG
             additionalRegisters: {},
             creationHeight: currentHeight
         };
         outputs.push(donationOutput);
 
         console.log('✅ OUTPUT 1 - DONATION:');
-        console.log('  - Amount:', Number(amountNanoErg) / 1000000000, 'ERG');
+        console.log('  - Amount:', Number(amountNanoErg) / Number(NANOERGS_PER_ERG), 'ERG');
         console.log('  - To address:', DONATION_ADDRESS);
         console.log('  - ErgoTree:', donationErgoTree);
 
-        // OUTPUT 2: Fee Output (CRÍTICO - según documentación oficial)
+        // OUTPUT 2: Fee Output (CRITICAL - according to official documentation)
         // "Create one fee output protected by the minerFee contract with txFee ERGs"
-        const feeErgoTree = "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304";
         const feeOutput = {
             value: RECOMMENDED_MIN_FEE.toString(),
-            ergoTree: feeErgoTree, // Miner fee contract
+            ergoTree: FEE_ERGOTREE, // Miner fee contract
             assets: [],
             additionalRegisters: {},
             creationHeight: currentHeight
@@ -380,21 +390,21 @@ async function buildDonationTransaction(amount) {
         outputs.push(feeOutput);
 
         console.log('✅ OUTPUT 2 - MINER FEE:');
-        console.log('  - Fee amount:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
+        console.log('  - Fee amount:', Number(RECOMMENDED_MIN_FEE) / Number(NANOERGS_PER_ERG), 'ERG');
         console.log('  - To miner contract');
-        console.log('  - ErgoTree:', feeErgoTree);
+        console.log('  - ErgoTree:', FEE_ERGOTREE);
 
-        // OUTPUT 3: Change (sin deducir fee - ya está en output separado)
+        // OUTPUT 3: Change (without deducting fee - it's already in separate output)
         const changeValue = totalInputValue - amountNanoErg - RECOMMENDED_MIN_FEE;
-        
-        console.log('🔍 BALANCE CALCULATION (con fee output separado):');
-        console.log('  - Total inputs:', Number(totalInputValue) / 1000000000, 'ERG');
-        console.log('  - Donation output:', Number(amountNanoErg) / 1000000000, 'ERG');
-        console.log('  - Fee output:', Number(RECOMMENDED_MIN_FEE) / 1000000000, 'ERG');
-        console.log('  - Change remaining:', Number(changeValue) / 1000000000, 'ERG');
+
+        console.log('🔍 BALANCE CALCULATION (with separate fee output):');
+        console.log('  - Total inputs:', Number(totalInputValue) / Number(NANOERGS_PER_ERG), 'ERG');
+        console.log('  - Donation output:', Number(amountNanoErg) / Number(NANOERGS_PER_ERG), 'ERG');
+        console.log('  - Fee output:', Number(RECOMMENDED_MIN_FEE) / Number(NANOERGS_PER_ERG), 'ERG');
+        console.log('  - Change remaining:', Number(changeValue) / Number(NANOERGS_PER_ERG), 'ERG');
         console.log('  - Formula: Inputs = Donation + Fee + Change');
         console.log('  - Verification:', Number(totalInputValue) === Number(amountNanoErg + RECOMMENDED_MIN_FEE + changeValue) ? '✅ CORRECT' : '❌ ERROR');
-        
+
         if (changeValue > 0n || allTokens.size > 0) {
             // Convert tokens for change output
             const changeTokens = Array.from(allTokens.entries()).map(([tokenId, amount]) => ({
@@ -402,14 +412,14 @@ async function buildDonationTransaction(amount) {
                 amount: amount.toString()
             }));
 
-            // Si no hay ERG de cambio pero sí tokens, necesitamos ERG mínimo
+            // If no ERG change but tokens, we need minimum ERG
             let finalChangeValue = changeValue;
             if (changeValue < 1000000n && allTokens.size > 0) {
-                finalChangeValue = 1000000n; // 0.001 ERG mínimo para caja con tokens
+                finalChangeValue = 1000000n; // 0.001 ERG minimum for box with tokens
                 console.log('⚠️ Adjusting change for minimum token box value');
             }
 
-            // Solo crear output de cambio si hay ERG positivo o tokens
+            // Only create change output if there's positive ERG or tokens
             if (finalChangeValue > 0n || changeTokens.length > 0) {
                 const changeOutput = {
                     value: finalChangeValue.toString(),
@@ -421,7 +431,7 @@ async function buildDonationTransaction(amount) {
                 outputs.push(changeOutput);
 
                 console.log('✅ OUTPUT 3 - CHANGE:');
-                console.log('  - ERG change:', Number(finalChangeValue) / 1000000000);
+                console.log('  - ERG change:', Number(finalChangeValue) / Number(NANOERGS_PER_ERG));
                 console.log('  - Tokens returned:', changeTokens.length);
                 console.log('  - Back to sender ErgoTree:', senderErgoTree);
 
@@ -436,7 +446,7 @@ async function buildDonationTransaction(amount) {
             console.log('ℹ️  No change output - exact amount');
         } else {
             console.error('🚨 Insufficient funds for transaction after fee');
-            throw new Error(`Insufficient funds. After donation and fee, remaining ${Number(changeValue) / 1000000000} ERG is insufficient`);
+            throw new Error(`Insufficient funds. After donation and fee, remaining ${Number(changeValue) / Number(NANOERGS_PER_ERG)} ERG is insufficient`);
         }
 
         // Build final transaction (Fleet SDK .build())
@@ -446,15 +456,15 @@ async function buildDonationTransaction(amount) {
             dataInputs: []
         };
 
-        console.log('📝 FINAL TRANSACTION (con fee output separado):');
+        console.log('📝 FINAL TRANSACTION (with separate fee output):');
         console.log('════════════════════════════════════════');
         console.log('📥 INPUTS:', transaction.inputs.length, 'UTXOs');
-        console.log('  - Total input value:', Number(totalInputValue) / 1000000000, 'ERG');
+        console.log('  - Total input value:', Number(totalInputValue) / Number(NANOERGS_PER_ERG), 'ERG');
         console.log('📤 OUTPUTS:', transaction.outputs.length, 'outputs');
-        
+
         let totalOutputValue = 0n;
         transaction.outputs.forEach((output, index) => {
-            const ergAmount = Number(BigInt(output.value)) / 1000000000;
+            const ergAmount = Number(BigInt(output.value)) / Number(NANOERGS_PER_ERG);
             totalOutputValue += BigInt(output.value);
             if (index === 0) {
                 console.log(`  ${index + 1}. DONATION: ${ergAmount} ERG → ${DONATION_ADDRESS.substring(0, 10)}...`);
@@ -464,13 +474,13 @@ async function buildDonationTransaction(amount) {
                 console.log(`  ${index + 1}. CHANGE: ${ergAmount} ERG + ${output.assets.length} tokens → (back to you)`);
             }
         });
-        
-        console.log('  - Total output value:', Number(totalOutputValue) / 1000000000, 'ERG');
-        
-        console.log('💰 BALANCE VERIFICATION (con fee output):');
-        console.log(`  - Total inputs: ${Number(totalInputValue) / 1000000000} ERG`);
-        console.log(`  - Total outputs: ${Number(totalOutputValue) / 1000000000} ERG`);
-        console.log(`  - Difference: ${Number(totalInputValue - totalOutputValue) / 1000000000} ERG`);
+
+        console.log('  - Total output value:', Number(totalOutputValue) / Number(NANOERGS_PER_ERG), 'ERG');
+
+        console.log('💰 BALANCE VERIFICATION (with fee output):');
+        console.log(`  - Total inputs: ${Number(totalInputValue) / Number(NANOERGS_PER_ERG)} ERG`);
+        console.log(`  - Total outputs: ${Number(totalOutputValue) / Number(NANOERGS_PER_ERG)} ERG`);
+        console.log(`  - Difference: ${Number(totalInputValue - totalOutputValue) / Number(NANOERGS_PER_ERG)} ERG`);
         console.log(`  - Perfect balance: ${totalInputValue === totalOutputValue ? '✅ YES (Inputs = Outputs)' : '❌ NO'}`);
         console.log('  - Fee is now an explicit output, not implicit');
         console.log('════════════════════════════════════════');
@@ -513,18 +523,18 @@ async function makeDonation() {
 
     try {
         donateBtn.disabled = true;
-        donateBtn.innerHTML = '<div class="loading"></div> Building transaction...';
-        showStatus('donationStatus', '⚡ Building transaction with Fleet SDK principles...', 'info');
+        donateBtn.innerHTML = 'Building transaction...';
+        showStatus('donationStatus', '⚡ Building transaction with correct fee handling...', 'info');
 
         // Build transaction
-        console.log('🔧 Building transaction manually (Fleet SDK principles)');
+        console.log('🔧 Building transaction with proper network fee');
         const result = await buildDonationTransaction(amount);
-        
+
         const unsignedTransaction = result.transaction;
         const tokenCount = result.tokenCount;
 
-        showStatus('donationStatus', 
-            `✍️ Please confirm in Nautilus:\n• Donation: ${amount} ERG → donation address\n• Miner fee: 0.0011 ERG → fee contract\n• ${tokenCount > 0 ? `Your ${tokenCount} token types + change → back to you` : 'Change → back to you'}`, 
+        showStatus('donationStatus',
+            `✍️ Please confirm in Nautilus:\n• Donation: ${amount} ERG → donation address\n• Network fee: ${Number(result.feeAmount) / Number(NANOERGS_PER_ERG)} ERG → miners\n• ${tokenCount > 0 ? `Your ${tokenCount} token types + change → back to you` : 'Change → back to you'}`,
             'info'
         );
 
@@ -539,6 +549,7 @@ async function makeDonation() {
         console.log('🎉 DONATION COMPLETED SUCCESSFULLY!');
         console.log('  - Transaction ID:', txId);
         console.log('  - Amount donated:', amount, 'ERG');
+        console.log('  - Network fee:', Number(result.feeAmount) / Number(NANOERGS_PER_ERG), 'ERG');
         console.log('  - Recipient:', DONATION_ADDRESS);
         console.log('  - Tokens preserved:', tokenCount);
 
