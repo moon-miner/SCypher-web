@@ -241,7 +241,6 @@ vercel --prod
 
 ### Technical Documentation
 - [Core Algorithm](https://github.com/moon-miner/bash-BIP39-seed-cypher) - Main Scypher repository
-- [Blockchain Storage](https://ergoplatform.org/) - Ergo platform documentation
 - [BIP39 Standard](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) - Official specification
 
 ## 🤝 Contributing
