@@ -53,12 +53,12 @@ async function handleDownload() {
         showProgress(95, '📁', 'Preparing file download...');
         await sleep(200);
 
-        // Create download with NEW filename: SCypherV2.xz
-        createXZDownload(xzBytes, 'SCypherV2.xz');
+        // Create download with NEW filename: SCypherV2.sh.xz
+        createXZDownload(xzBytes, 'SCypherV2.sh.xz');
 
         // Complete
         showProgress(100, '✅', 'Download completed successfully!');
-        showSuccess('SCypherV2.xz downloaded from blockchain!');
+        showSuccess('SCypherV2.sh.xz downloaded from blockchain!');
 
         // Reset button
         downloadBtn.innerHTML = '✅ Download Complete';
