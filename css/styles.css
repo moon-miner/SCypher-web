@@ -2322,6 +2322,10 @@ section,
     .navbar .container {
         padding: 1rem 15px;
         min-height: 80px;
+/* SCYPHER - CSS COMPLETO CON DARK MODE */
+/* Versión: 2.0 - Dark Mode por Defecto */
+/* ========================================= */
+
     }
 
     .nav-brand {
@@ -2375,5 +2379,17 @@ section,
 
     .logo {
         font-size: 1.2rem;
+    }
+}
+
+/* OCULTAR botón cerrar menú en escritorio */
+.close-menu-btn {
+    display: none !important; /* Oculto por defecto en escritorio */
+}
+
+/* MOSTRAR solo en móviles */
+@media (max-width: 768px) {
+    .close-menu-btn {
+        display: block !important; /* Visible solo en móvil */
     }
 }
