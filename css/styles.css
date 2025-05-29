@@ -2132,354 +2132,196 @@ section,
     max-width: 100%;
 }
 
-
-/* ========================================= */
-/* MENÚ MÓVIL PERFECTO */
-/* ========================================= */
-
 @media (max-width: 768px) {
 
-    /* Nav menu móvil - diseño perfecto */
+    /* Menú móvil - SIMPLE Y FUNCIONAL */
     .nav-menu {
         position: fixed;
-        top: 70px;
+        top: 80px;
         left: -100%;
         width: 100%;
-        height: calc(100vh - 70px);
+        height: calc(100vh - 80px);
         background: var(--bg-primary);
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        padding: 2rem 1.5rem;
-        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: var(--shadow-xl);
-        border-right: 1px solid var(--border-color);
-        gap: 1.5rem;
+        padding: 2rem 1rem;
+        transition: left 0.3s ease;
+        box-shadow: var(--shadow-lg);
+        border-top: 1px solid var(--border-color);
+        gap: 2rem;
         overflow-y: auto;
+        z-index: 999;
     }
 
     .nav-menu.active {
         left: 0;
     }
 
-    /* BOTÓN CERRAR - Elegante y Compacto */
-    .nav-menu::before {
-        content: '✕';
-        position: absolute;
-        top: 1.5rem;
-        right: 1.5rem;
-        width: 40px;
-        height: 40px;
+    /* Botón cerrar SIMPLE en la parte superior */
+    .close-menu-btn {
+        width: 100%;
+        padding: 1rem;
         background: var(--accent-color);
         color: white;
-        font-weight: 700;
-        font-size: 1.25rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        border: 2px solid var(--accent-color);
+        margin-bottom: 1rem;
         box-shadow: var(--shadow-md);
-        z-index: 10;
     }
 
-    .nav-menu::before:hover {
+    .close-menu-btn:hover {
         background: var(--accent-hover);
-        transform: scale(1.1);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
     }
 
-    /* Theme toggle - MÁS PROMINENTE */
+    /* Theme toggle */
     .nav-theme {
-        order: -2;
-        margin: 2rem 0 1rem 0;
+        order: 1;
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
 
     .theme-toggle {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-        border-radius: 2rem;
-        box-shadow: var(--shadow-lg);
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 1.5rem;
         background: var(--bg-card);
         border: 2px solid var(--border-color);
-        min-width: 200px;
         transition: all 0.3s ease;
+        cursor: pointer;
     }
 
     .theme-toggle:hover {
         border-color: var(--accent-color);
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-xl);
+        box-shadow: var(--shadow-md);
     }
 
     .theme-option {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 1rem;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
         transition: all 0.3s ease;
     }
 
     .theme-option.active {
-        background: rgba(124, 58, 237, 0.2);
         color: var(--accent-color);
         font-weight: 600;
     }
 
-    .theme-separator {
-        color: var(--border-color);
-        font-weight: 300;
-        margin: 0 0.5rem;
-    }
-
-    /* Links del menú - MEJORADOS */
+    /* Links del menú */
     .nav-menu .nav-link {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 500;
-        padding: 1.25rem 2.5rem;
+        padding: 1rem 2rem;
         width: 100%;
-        max-width: 280px;
+        max-width: 300px;
         text-align: center;
-        border-radius: 1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid transparent;
+        border-radius: 0.75rem;
         background: var(--bg-card);
-        box-shadow: var(--shadow-sm);
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Efecto hover elegante */
-    .nav-menu .nav-link::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: var(--gradient-accent);
-        transition: left 0.3s ease;
-        z-index: -1;
-    }
-
-    .nav-menu .nav-link:hover::after,
-    .nav-menu .nav-link.active::after {
-        left: 0;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--text-primary);
     }
 
     .nav-menu .nav-link:hover,
     .nav-menu .nav-link.active {
+        background: var(--accent-color);
         color: white;
         border-color: var(--accent-color);
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
-    /* Language selector - CONSISTENTE */
+    /* Language selector */
     .nav-lang {
         order: 99;
-        margin-top: 1rem;
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
 
     .lang-select {
         padding: 1rem 1.5rem;
-        font-size: 1.1rem;
-        font-weight: 500;
-        border-radius: 1rem;
-        min-width: 120px;
-        text-align: center;
+        font-size: 1rem;
+        border-radius: 0.75rem;
         background: var(--bg-card);
         border: 2px solid var(--border-color);
-        transition: all 0.3s ease;
-        box-shadow: var(--shadow-sm);
         color: var(--text-primary);
+        min-width: 120px;
+        text-align: center;
+        transition: all 0.3s ease;
     }
 
     .lang-select:hover,
     .lang-select:focus {
         border-color: var(--accent-color);
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
         outline: none;
+        box-shadow: var(--shadow-md);
     }
 
-    /* Hamburger menu - MEJORADO */
+    /* Hamburger toggle */
     .nav-toggle {
         display: flex;
         flex-direction: column;
         gap: 4px;
         cursor: pointer;
-        padding: 0.75rem;
-        border-radius: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
         transition: all 0.3s ease;
-        position: relative;
         z-index: 1001;
-        background: transparent;
-        border: 2px solid transparent;
     }
 
     .nav-toggle:hover {
         background: rgba(124, 58, 237, 0.1);
-        border-color: var(--accent-color);
-        transform: scale(1.05);
     }
 
     .nav-toggle span {
-        width: 26px;
+        width: 25px;
         height: 3px;
         background: var(--text-primary);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         border-radius: 2px;
     }
 
-    /* Animación del hamburger - MÁS SUAVE */
+    /* Animación del hamburger */
     .nav-menu.active ~ .nav-toggle span:nth-child(1) {
-        transform: rotate(45deg) translate(7px, 7px);
+        transform: rotate(45deg) translate(6px, 6px);
         background: var(--accent-color);
     }
 
     .nav-menu.active ~ .nav-toggle span:nth-child(2) {
         opacity: 0;
-        transform: scale(0);
     }
 
     .nav-menu.active ~ .nav-toggle span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -7px);
+        transform: rotate(-45deg) translate(6px, -6px);
         background: var(--accent-color);
     }
 
-    /* Backdrop - MÁS ELEGANTE */
-    .nav-menu.active::after {
+    /* Backdrop */
+    .nav-menu.active::before {
         content: '';
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
         z-index: -1;
-        animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Navbar altura */
+    /* Navbar adjustments */
     .navbar .container {
-        padding: 0.75rem 15px;
-        min-height: 70px;
-        display: flex;
-        align-items: center;
-    }
-
-    /* Brand en móvil */
-    .nav-brand {
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
-
-    .logo {
-        font-size: 1.4rem;
-    }
-
-    /* Animación de entrada del menú */
-    .nav-menu.active {
-        animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes slideInFromLeft {
-        from {
-            left: -100%;
-            opacity: 0;
-        }
-        to {
-            left: 0;
-            opacity: 1;
-        }
-    }
-
-    /* Animación escalonada de los elementos */
-    .nav-menu.active .nav-link {
-        animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        opacity: 0;
-    }
-
-    .nav-menu.active .nav-link:nth-child(1) { animation-delay: 0.1s; }
-    .nav-menu.active .nav-link:nth-child(2) { animation-delay: 0.2s; }
-    .nav-menu.active .nav-link:nth-child(3) { animation-delay: 0.3s; }
-    .nav-menu.active .nav-link:nth-child(4) { animation-delay: 0.4s; }
-
-    .nav-menu.active .theme-toggle {
-        animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        animation-delay: 0.05s;
-        opacity: 0;
-    }
-
-    .nav-menu.active .lang-select {
-        animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        animation-delay: 0.5s;
-        opacity: 0;
-    }
-
-    @keyframes slideInUp {
-        from {
-            transform: translateY(30px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-}
-
-/* Móviles extra pequeños - AJUSTES PROPORCIONADOS */
-@media (max-width: 480px) {
-    .nav-menu {
-        padding: 1.5rem 1rem;
-        gap: 1.25rem;
-        top: 65px;
-        height: calc(100vh - 65px);
-    }
-
-    .nav-menu::before {
-        top: 1rem;
-        right: 1rem;
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
-    }
-
-    .theme-toggle {
-        padding: 0.875rem 1.5rem;
-        font-size: 1rem;
-        min-width: 180px;
-    }
-
-    .theme-option {
-        font-size: 0.9rem;
-        padding: 0.375rem 0.75rem;
-    }
-
-    .nav-menu .nav-link {
-        font-size: 1.1rem;
-        padding: 1rem 2rem;
-        max-width: 260px;
-    }
-
-    .lang-select {
-        padding: 0.875rem 1.25rem;
-        font-size: 1rem;
-        min-width: 100px;
-    }
-
-    .navbar .container {
-        padding: 0.625rem 10px;
-        min-height: 65px;
+        padding: 1rem 15px;
+        min-height: 80px;
     }
 
     .nav-brand {
@@ -2489,42 +2331,49 @@ section,
     .logo {
         font-size: 1.3rem;
     }
+}
 
-    .nav-toggle {
-        padding: 0.625rem;
+/* Móviles pequeños */
+@media (max-width: 480px) {
+    .nav-menu {
+        top: 70px;
+        height: calc(100vh - 70px);
+        padding: 1.5rem 0.75rem;
+        gap: 1.5rem;
     }
 
-    .nav-toggle span {
-        width: 24px;
+    .close-menu-btn {
+        font-size: 1rem;
+        padding: 0.875rem;
     }
-}
 
-/* Z-index management */
-.nav-menu {
-    z-index: 1000;
-}
+    .nav-menu .nav-link {
+        font-size: 1.1rem;
+        padding: 0.875rem 1.5rem;
+        max-width: 280px;
+    }
 
-.navbar {
-    z-index: 1001;
-}
+    .theme-toggle {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+    }
 
-/* Focus states - ACCESIBILIDAD */
-.nav-toggle:focus,
-.nav-menu .nav-link:focus,
-.theme-toggle:focus,
-.lang-select:focus {
-    outline: 3px solid var(--accent-color);
-    outline-offset: 2px;
-}
+    .lang-select {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+        min-width: 100px;
+    }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    .nav-menu,
-    .nav-menu .nav-link,
-    .theme-toggle,
-    .lang-select,
-    .nav-toggle span {
-        animation: none !important;
-        transition: none !important;
+    .navbar .container {
+        min-height: 70px;
+        padding: 0.75rem 10px;
+    }
+
+    .nav-brand {
+        font-size: 1rem;
+    }
+
+    .logo {
+        font-size: 1.2rem;
     }
 }
