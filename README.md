@@ -1,195 +1,339 @@
-# Scypher - Decentralized BIP39 Seed Cipher
+# 🔐 Scypher Web
 
-A professional website for Scypher, a decentralized BIP39 seed phrase encryption tool with code stored on the Ergo blockchain.
+**Decentralized BIP39 Seed Cipher Interface**
 
-## Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/badge/Website-scypher.vercel.app-blue)](https://scypher.vercel.app/)
+[![Blockchain Storage](https://img.shields.io/badge/Storage-Ergo%20Blockchain-green)](https://ergoplatform.org/)
+[![Version](https://img.shields.io/badge/Version-2.0-brightgreen)](https://github.com/moon-miner/SCypher-web/releases)
 
-- 🔐 **Decentralized Storage**: Cipher code stored permanently on Ergo blockchain
-- 🌍 **Multi-language Support**: English, Spanish, Chinese, German, and Russian
-- 💰 **Token-Safe Donations**: Donate ERG while preserving all your tokens
-- 📥 **Direct Download**: Fetch the cipher script directly from the blockchain
-- 📱 **Responsive Design**: Works perfectly on all devices
-- 🚀 **No Backend Required**: Everything runs client-side
+A decentralized web interface for [Scypher](https://github.com/moon-miner/bash-BIP39-seed-cypher) - the XOR-based BIP39 seed phrase cipher that maintains complete BIP39 compatibility.
 
-## Project Structure
+## 🌟 What Makes This Special
+
+- **🔗 Blockchain Storage**: The core cipher script is permanently stored on Ergo blockchain, ensuring it can never be lost, altered, or censored
+- **🎯 Zero Backend**: Pure frontend application - no servers, databases, or external dependencies
+- **🌍 Decentralized Downloads**: Fetch cipher fragments directly from blockchain storage
+- **🛡️ Token-Safe Donations**: Integrated Nautilus wallet donations that preserve all your tokens and NFTs
+- **🌙 Dark Mode First**: Modern, accessible design with comprehensive theme system
+- **🌐 Multilingual**: Support for English, Spanish, Chinese, German, and Russian
+
+## 🚀 Live Demo
+
+**Visit: [scypher.vercel.app](https://scypher.vercel.app/)**
+
+The website provides:
+- Interactive download system fetching from Ergo blockchain
+- Comprehensive documentation and tutorials
+- Secure donation system using Ergo's Nautilus wallet
+- Mobile-responsive design with smooth animations
+
+## 🏗️ Architecture Overview
+
+### Frontend Technologies
+- **Pure HTML5/CSS3/JavaScript** - No frameworks, maximum compatibility
+- **Progressive Web App** features for offline functionality
+- **WebCrypto API** integration for secure operations
+- **Responsive Design** with mobile-first approach
+
+### Blockchain Integration
+- **Ergo Blockchain Storage**: Script fragments stored as token metadata
+- **SigmaSpace API**: Reliable blockchain data retrieval
+- **Decentralized Architecture**: No single points of failure
+- **Verifiable Downloads**: All files reconstructed from immutable blockchain data
+
+### Key Features
+
+#### 🔄 Decentralized Download System
+```javascript
+// Fetches script fragments from Ergo blockchain
+const TOKEN_URLS = [
+    "https://api.sigmaspace.io/api/v1/tokens/01594be725214d...",
+    // 8 fragment URLs stored on blockchain
+];
+```
+
+The system:
+1. Fetches 8 token fragments from Ergo blockchain
+2. Reconstructs base64-encoded data
+3. Rebuilds the compressed SCypherV2.sh.xz file
+4. Provides secure download with integrity verification
+
+#### 💰 Token-Safe Donation System
+```javascript
+// Advanced UTXO management preserves all tokens
+function selectInputsAndTokens(utxos, requiredAmount) {
+    // Collects ALL tokens from inputs
+    // Creates proper change outputs
+    // Ensures no token loss during donations
+}
+```
+
+#### 🎨 Advanced Theme System
+```css
+:root {
+    /* Dark mode by default with sophisticated color palette */
+    --bg-primary: #0f1115;
+    --accent-color: #7c3aed;
+    /* Smooth transitions for all theme changes */
+}
+```
+
+#### 🌐 Internationalization
+```javascript
+const translations = {
+    en: { /* English translations */ },
+    es: { /* Spanish translations */ },
+    zh: { /* Chinese translations */ },
+    de: { /* German translations */ },
+    ru: { /* Russian translations */ }
+};
+```
+
+## 📋 What is Scypher?
+
+Scypher is a revolutionary cryptographic tool that:
+
+- **Encrypts BIP39 seed phrases** into other valid BIP39 phrases
+- **Uses XOR encryption** with SHAKE-256 for cryptographic security
+- **Maintains BIP39 compliance** - encrypted output works in any wallet
+- **Provides perfect reversibility** - same password restores original phrase
+- **Requires no external dependencies** - pure Bash + OpenSSL implementation
+
+### How It Works
 
 ```
-scypher-web/
-├── index.html          # Main HTML file
-├── css/
-│   └── styles.css      # All styles
-├── js/
-│   ├── main.js         # Core functionality
-│   ├── translations.js # Multi-language support
-│   ├── download.js     # Blockchain download logic
-│   └── donation.js     # Token-safe donation system
-├── vercel.json         # Vercel configuration
-└── README.md           # This file
+Original Seed + Password + Iterations
+            ↓
+    XOR Encryption with SHAKE-256
+            ↓
+    Encrypted BIP39 Seed Phrase
 ```
 
-## Deployment to Vercel
+**Key Innovation**: Unlike traditional encryption that produces random data, Scypher's output is always a valid BIP39 seed phrase that any cryptocurrency wallet would accept.
+
+## 🛠️ Development Setup
 
 ### Prerequisites
-
-- GitHub account
-- Vercel account (free at vercel.com)
-- Git installed locally
-
-### Step-by-Step Deployment
-
-1. **Create GitHub Repository**
-   ```bash
-   # Initialize git in project folder
-   git init
-
-   # Add all files
-   git add .
-
-   # Commit
-   git commit -m "Initial commit - Scypher website"
-
-   # Create repo on GitHub and add remote
-   git remote add origin https://github.com/YOUR_USERNAME/scypher-web.git
-
-   # Push to GitHub
-   git push -u origin main
-   ```
-
-2. **Deploy to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
-   - Configure project:
-     - Framework Preset: Other
-     - Build Command: (leave empty)
-     - Output Directory: (leave empty)
-   - Click "Deploy"
-
-3. **Configure Domain (Optional)**
-   - In Vercel dashboard, go to Settings → Domains
-   - Add your custom domain
-   - Update DNS records as instructed
-
-### Environment Variables
-
-No environment variables are required for this project.
-
-## Development
+- Modern web browser with ES6+ support
+- Node.js 16+ (for development tools)
+- Basic understanding of blockchain technology
 
 ### Local Development
+```bash
+# Clone the repository
+git clone https://github.com/moon-miner/SCypher-web.git
+cd SCypher-web
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/scypher-web.git
-   cd scypher-web
-   ```
+# Serve locally (Python 3)
+python -m http.server 8000
 
-2. Serve locally:
-   ```bash
-   # Using Python
-   python -m http.server 8000
+# Or use Node.js
+npx serve .
 
-   # Using Node.js
-   npx http-server
+# Visit http://localhost:8000
+```
 
-   # Using PHP
-   php -S localhost:8000
-   ```
+### Project Structure
+```
+SCypher-web/
+├── index.html              # Main application entry point
+├── css/
+│   └── styles.css         # Complete CSS with dark/light themes
+├── js/
+│   ├── main.js           # Core application logic
+│   ├── download.js       # Blockchain download system
+│   ├── donation.js       # Nautilus wallet integration
+│   └── translations.js   # Multilingual support
+├── documentation/         # Comprehensive docs
+└── assets/               # Images and media
+```
 
-3. Open `http://localhost:8000` in your browser
+## 🔧 Key Components
 
-### Adding New Languages
+### 1. Blockchain Download System (`download.js`)
+- Fetches 8 script fragments from Ergo blockchain
+- Reconstructs original compressed file
+- Provides detailed download progress
+- Verifies file integrity
 
-1. Add translation in `js/translations.js`:
-   ```javascript
-   const translations = {
-       // ... existing languages
-       fr: {
-           hero: {
-               title: "Chiffreur BIP39 Décentralisé",
-               // ... add all translations
-           }
-       }
-   };
-   ```
+### 2. Donation System (`donation.js`)
+- Integrates with Nautilus wallet
+- Preserves all tokens in user UTXOs
+- Uses proper fee handling
+- Provides transparent transaction building
 
-2. Add language option in `index.html`:
-   ```html
-   <option value="fr">FR</option>
-   ```
+### 3. Theme System (`main.js`)
+- Dark mode by default
+- Smooth theme transitions
+- System preference detection
+- Persistent user preferences
 
-## Technical Details
+### 4. Internationalization (`translations.js`)
+- 5 language support
+- Browser language detection
+- Fallback to English
+- Context-aware translations
 
-### Blockchain Download
+## 🚀 Deployment
 
-The download functionality fetches script fragments from the Ergo blockchain:
-- Retrieves token descriptions from 4 specific tokens
-- Combines base64-encoded fragments
-- Decodes and delivers the original script
+### Vercel Deployment (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
 
-### Token-Safe Donations
+# Deploy
+vercel --prod
+```
 
-The donation system ensures user tokens are preserved:
-- Builds transactions that separate ERG from tokens
-- Returns all tokens to the user's wallet
-- Only sends ERG to the donation address
+### Alternative Deployments
+- **Netlify**: Drag and drop the folder
+- **GitHub Pages**: Enable in repository settings
+- **IPFS**: Truly decentralized hosting
+- **Traditional hosting**: Upload files to any web server
 
-## Security
+## 🔒 Security Features
 
-- No private keys are ever handled by the website
-- All wallet interactions go through Nautilus Wallet
-- No data is sent to any servers
-- Everything runs client-side in the browser
+### Frontend Security
+- **No sensitive data storage** - everything processed client-side
+- **Secure random generation** using WebCrypto API
+- **Memory cleanup** for sensitive operations
+- **CSP headers** for XSS protection
 
-## Browser Support
+### Blockchain Security
+- **Immutable storage** on Ergo blockchain
+- **Verifiable downloads** with hash checking
+- **Decentralized architecture** eliminates single points of failure
+- **Open source verification** of all components
 
-- Chrome/Edge: Full support
-- Firefox: Full support
-- Safari: Full support
-- Mobile browsers: Full support
+### Wallet Integration Security
+- **Token preservation** in all transactions
+- **Proper UTXO management** prevents token loss
+- **Transparent fee handling** with separate fee outputs
+- **User confirmation** for all transactions
 
-## Troubleshooting
+## 🎯 Browser Compatibility
 
-### Nautilus Wallet not detected
-- Ensure Nautilus extension is installed
-- Refresh the page after installation
-- Check that the extension is enabled
+### Fully Supported
+- **Chrome/Chromium 80+**
+- **Firefox 75+**
+- **Safari 13.1+**
+- **Edge 80+**
 
-### Download issues
-- Check your internet connection
-- Ensure the Ergo blockchain API is accessible
-- Try again later if the API is down
+### Mobile Support
+- **iOS Safari 13.4+**
+- **Chrome Mobile 80+**
+- **Samsung Internet 13+**
+- **Firefox Mobile 79+**
 
-### Donation issues
-- Ensure you have enough ERG for the donation + fees
-- Check that Nautilus is unlocked
-- Verify you're on the correct network
+### Required Features
+- ES6+ JavaScript support
+- CSS Grid and Flexbox
+- Web Crypto API (for secure operations)
+- Local Storage (for preferences)
 
-## Contributing
+## 📚 Documentation
 
+### User Guides
+- [How Scypher Works](https://scypher.vercel.app/#how-it-works) - Understanding the encryption process
+- [Download Guide](https://scypher.vercel.app/#download) - Getting Scypher from blockchain
+- [Security Best Practices](https://github.com/moon-miner/bash-BIP39-seed-cypher/tree/main/documentation) - Safe usage guidelines
+
+### Technical Documentation
+- [Core Algorithm](https://github.com/moon-miner/bash-BIP39-seed-cypher) - Main Scypher repository
+- [Blockchain Storage](https://ergoplatform.org/) - Ergo platform documentation
+- [BIP39 Standard](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) - Official specification
+
+## 🤝 Contributing
+
+We welcome contributions! This project was developed for ErgoHack X with AI assistance.
+
+### Ways to Contribute
+- 🐛 **Report bugs** via GitHub Issues
+- 💡 **Suggest features** for future versions
+- 🌐 **Add translations** for new languages
+- 🔧 **Submit pull requests** for improvements
+- ⭐ **Star the repository** if you find it useful
+
+### Development Guidelines
+1. **Follow existing code style** and patterns
+2. **Test thoroughly** across different browsers
+3. **Maintain backward compatibility** when possible
+4. **Document new features** comprehensively
+5. **Consider security implications** of all changes
+
+### Pull Request Process
 1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📈 Roadmap
 
-MIT License - see LICENSE file for details
+### Version 2.1 (Q2 2025)
+- [ ] **IPFS Integration** - Alternative decentralized storage
+- [ ] **QR Code Support** - Easy mobile seed phrase transfer
+- [ ] **Hardware Wallet Integration** - Ledger/Trezor support
+- [ ] **Batch Processing** - Multiple seed phrase operations
 
-## Links
+### Version 2.2 (Q3 2025)
+- [ ] **PWA Features** - Full offline functionality
+- [ ] **Additional Languages** - Japanese, Korean, Portuguese
+- [ ] **Enhanced Security** - HSM integration options
+- [ ] **API Documentation** - For developers
 
-- Scypher Repository: [GitHub - PLACEHOLDER]
-- Website Repository: [GitHub - PLACEHOLDER]
-- Ergo Blockchain: [ergoplatform.org](https://ergoplatform.org)
-- Nautilus Wallet: [Chrome Web Store](https://chromewebstore.google.com/detail/nautilus-wallet/gjlmehlldlphhljhpnlddaodbjcchai)
+### Version 3.0 (Q4 2025)
+- [ ] **Web3 Integration** - Direct blockchain interaction
+- [ ] **Advanced Encryption** - Additional cipher options
+- [ ] **Social Recovery** - Shamir's Secret Sharing
+- [ ] **Enterprise Features** - Multi-user support
 
-## Contact
+## ⚠️ Disclaimer
 
-- Discord: [PLACEHOLDER]
-- Telegram: [PLACEHOLDER]
-- GitHub Issues: [PLACEHOLDER]
+**IMPORTANT SECURITY NOTICE**
+
+This software is provided "AS IS" without warranty of any kind. The developers assume no responsibility for:
+
+- **Loss of funds** or cryptocurrency assets
+- **Incorrect usage** or user errors  
+- **Security implications** in specific contexts
+- **Modifications** made by third parties
+
+### Best Practices
+- ✅ **Test with small amounts** first
+- ✅ **Maintain secure backups** of original seed phrases
+- ✅ **Use on clean, offline systems** when possible
+- ✅ **Verify script integrity** before use
+- ✅ **Keep strong, unique passwords**
+
+## 📞 Support & Community
+
+### Get Help
+- **GitHub Issues**: [Report bugs or ask questions](https://github.com/moon-miner/SCypher-web/issues)
+- **Main Repository**: [Scypher Core](https://github.com/moon-miner/bash-BIP39-seed-cypher)
+- **Website**: [scypher.vercel.app](https://scypher.vercel.app/)
+
+### Links
+- 🌐 **Live Demo**: [scypher.vercel.app](https://scypher.vercel.app/)
+- 📦 **Core Tool**: [bash-BIP39-seed-cypher](https://github.com/moon-miner/bash-BIP39-seed-cypher)
+- 🔗 **Ergo Platform**: [ergoplatform.org](https://ergoplatform.org/)
+- 💻 **ErgoHack X**: Competition project showcase
+
+## 📄 License
+
+**MIT License** - See [LICENSE](LICENSE) file for details.
+
+You are free to use, modify, and distribute this software.
 
 ---
 
-Built with ❤️ for the Ergo community
+<div align="center">
+
+**Made with ❤️ for the cryptocurrency community**
+
+*Empowering secure, decentralized seed phrase management*
+
+[⭐ Star this repo](https://github.com/moon-miner/SCypher-web) • [🐛 Report bug](https://github.com/moon-miner/SCypher-web/issues) • [✨ Request feature](https://github.com/moon-miner/SCypher-web/issues)
+
+</div>
