@@ -380,50 +380,28 @@ function setupMobileMenu() {
 
     navToggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        navMenu.classList.toggle('active');
-
-        // Update aria attributes for accessibility
         const isOpen = navMenu.classList.contains('active');
-        navToggle.setAttribute('aria-expanded', isOpen);
-        navMenu.setAttribute('aria-hidden', !isOpen);
 
-        console.log('🔄 Mobile menu toggled:', isOpen ? 'open' : 'closed');
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-            if (navMenu.classList.contains('active')) {
-                navMenu.classList.remove('active');
-                navToggle.setAttribute('aria-expanded', 'false');
-                navMenu.setAttribute('aria-hidden', 'true');
-                console.log('📱 Mobile menu closed (click outside)');
-            }
+        if (isOpen) {
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        } else {
+            navMenu.classList.add('active');
+            navToggle.setAttribute('aria-expanded', 'true');
         }
+
+        console.log('🔄 Mobile menu toggled:', !isOpen ? 'open' : 'closed');
     });
 
-    // Close menu when clicking on a link
+    // Close menu when clicking on nav links
     const navLinks = navMenu.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (navMenu.classList.contains('active')) {
                 navMenu.classList.remove('active');
                 navToggle.setAttribute('aria-expanded', 'false');
-                navMenu.setAttribute('aria-hidden', 'true');
-                console.log('📱 Mobile menu closed (link clicked)');
             }
         });
-    });
-
-    // Close menu on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
-            navMenu.classList.remove('active');
-            navToggle.setAttribute('aria-expanded', 'false');
-            navMenu.setAttribute('aria-hidden', 'true');
-            navToggle.focus(); // Return focus to toggle button
-            console.log('📱 Mobile menu closed (escape key)');
-        }
     });
 
     // Set initial aria attributes
@@ -431,6 +409,9 @@ function setupMobileMenu() {
     navToggle.setAttribute('aria-controls', 'nav-menu');
     navMenu.setAttribute('aria-hidden', 'true');
     navMenu.setAttribute('id', 'nav-menu');
+
+    // Setup simple close functionality
+    setupSimpleMenuClose();
 
     console.log('✅ Mobile menu setup complete');
 }
@@ -737,4 +718,63 @@ function setupMobileMenu() {
     setupMobileMenuClose();
 
     console.log('✅ Mobile menu setup complete');
+}
+
+function setupSimpleMenuClose() {
+    const closeBtn = document.getElementById('closeMenuBtn');
+    const navMenu = document.querySelector('.nav-menu');
+    const navToggle = document.querySelector('.nav-toggle');
+
+    if (!closeBtn || !navMenu || !navToggle) return;
+
+    // Click en botón cerrar
+    closeBtn.addEventListener('click', function() {
+        navMenu.classList.remove('active');
+        navToggle.setAttribute('aria-expanded', 'false');
+        console.log('📱 Menu closed via button');
+    });
+
+    // Click en backdrop (área oscura)
+    navMenu.addEventListener('click', function(e) {
+        if (e.target === navMenu) {
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            console.log('📱 Menu closed via backdrop');
+        }
+    });
+
+    // Prevenir que back button salga de la página
+    let menuWasOpen = false;
+
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const isOpen = navMenu.classList.contains('active');
+
+                if (isOpen && !menuWasOpen) {
+                    menuWasOpen = true;
+                    if (window.history && window.history.pushState) {
+                        window.history.pushState({ menuOpen: true }, '', window.location.href);
+                    }
+                } else if (!isOpen && menuWasOpen) {
+                    menuWasOpen = false;
+                }
+            }
+        });
+    });
+
+    observer.observe(navMenu, { attributes: true });
+
+    window.addEventListener('popstate', function(e) {
+        if (menuWasOpen && navMenu.classList.contains('active')) {
+            e.preventDefault();
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            if (window.history && window.history.pushState) {
+                window.history.pushState(null, '', window.location.href);
+            }
+        }
+    });
+
+    console.log('✅ Simple menu close setup complete');
 }
