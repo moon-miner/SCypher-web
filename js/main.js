@@ -552,3 +552,189 @@ if (typeof window !== 'undefined') {
 
     console.log('✅ Global functions exported');
 }
+
+// ========================================
+// MOBILE MENU CLOSE FUNCTIONALITY
+// ========================================
+
+function setupMobileMenuClose() {
+    console.log('📱 Setting up mobile menu close functionality...');
+
+    const navMenu = document.querySelector('.nav-menu');
+    const navToggle = document.querySelector('.nav-toggle');
+
+    if (!navMenu || !navToggle) {
+        console.warn('⚠️ Mobile menu elements not found for close functionality');
+        return;
+    }
+
+    // Función para cerrar el menú
+    function closeMenu() {
+        if (navMenu.classList.contains('active')) {
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navMenu.setAttribute('aria-hidden', 'true');
+            console.log('📱 Mobile menu closed');
+
+            // Anunciar a screen readers
+            announceToScreenReader('Menu closed');
+
+            return true;
+        }
+        return false;
+    }
+
+    // Click en el botón cerrar (::before pseudo-element)
+    navMenu.addEventListener('click', function(e) {
+        // Si el click fue en la parte superior (botón cerrar)
+        const rect = navMenu.getBoundingClientRect();
+        const clickY = e.clientY - rect.top;
+
+        // Si el click fue en los primeros 80px (área del botón cerrar)
+        if (clickY <= 80) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMenu();
+        }
+    });
+
+    // Click en el backdrop (área oscura)
+    navMenu.addEventListener('click', function(e) {
+        // Si el click fue en el backdrop (::after pseudo-element)
+        if (e.target === navMenu) {
+            closeMenu();
+        }
+    });
+
+    // Swipe hacia la izquierda para cerrar (touch devices)
+    let startX = 0;
+    let startY = 0;
+
+    navMenu.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    navMenu.addEventListener('touchend', function(e) {
+        if (!startX || !startY) return;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+
+        const diffX = startX - endX;
+        const diffY = startY - endY;
+
+        // Si el swipe fue principalmente horizontal hacia la izquierda
+        if (Math.abs(diffX) > Math.abs(diffY) && diffX > 50) {
+            closeMenu();
+        }
+
+        startX = 0;
+        startY = 0;
+    }, { passive: true });
+
+    // Escape key para cerrar
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            closeMenu();
+            navToggle.focus(); // Return focus to toggle button
+        }
+    });
+
+    // Prevenir que el botón back del navegador cierre la página cuando el menú está abierto
+    let menuWasOpen = false;
+
+    // Detectar cuando se abre el menú
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const isOpen = navMenu.classList.contains('active');
+
+                if (isOpen && !menuWasOpen) {
+                    // Menú se acaba de abrir
+                    menuWasOpen = true;
+                    // Agregar un estado al historial para capturar el back button
+                    if (window.history && window.history.pushState) {
+                        window.history.pushState({ menuOpen: true }, '', window.location.href);
+                    }
+                } else if (!isOpen && menuWasOpen) {
+                    // Menú se acaba de cerrar
+                    menuWasOpen = false;
+                }
+            }
+        });
+    });
+
+    observer.observe(navMenu, { attributes: true });
+
+    // Manejar el botón back del navegador
+    window.addEventListener('popstate', function(e) {
+        if (menuWasOpen && navMenu.classList.contains('active')) {
+            // Si el menú está abierto y se presiona back, cerrar el menú sin ir atrás
+            e.preventDefault();
+            closeMenu();
+            // Restaurar el estado del historial
+            if (window.history && window.history.pushState) {
+                window.history.pushState(null, '', window.location.href);
+            }
+        }
+    });
+
+    console.log('✅ Mobile menu close functionality setup complete');
+}
+
+// Llamar la función después de setupMobileMenu
+// REEMPLAZAR LA FUNCIÓN setupMobileMenu EN main.js CON ESTA VERSIÓN MEJORADA:
+
+function setupMobileMenu() {
+    console.log('📱 Setting up mobile menu...');
+
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (!navToggle || !navMenu) {
+        console.warn('⚠️ Mobile menu elements not found');
+        return;
+    }
+
+    navToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navMenu.classList.contains('active');
+
+        if (isOpen) {
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+            navMenu.setAttribute('aria-hidden', 'true');
+        } else {
+            navMenu.classList.add('active');
+            navToggle.setAttribute('aria-expanded', 'true');
+            navMenu.setAttribute('aria-hidden', 'false');
+        }
+
+        console.log('🔄 Mobile menu toggled:', !isOpen ? 'open' : 'closed');
+    });
+
+    // Close menu when clicking on a link
+    const navLinks = navMenu.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navMenu.setAttribute('aria-hidden', 'true');
+                console.log('📱 Mobile menu closed (link clicked)');
+            }
+        });
+    });
+
+    // Set initial aria attributes
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-controls', 'nav-menu');
+    navMenu.setAttribute('aria-hidden', 'true');
+    navMenu.setAttribute('id', 'nav-menu');
+
+    // Setup close functionality
+    setupMobileMenuClose();
+
+    console.log('✅ Mobile menu setup complete');
+}
