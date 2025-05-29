@@ -268,26 +268,6 @@ We welcome contributions! This project was developed for ErgoHack X with AI assi
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📈 Roadmap
-
-### Version 2.1 (Q2 2025)
-- [ ] **IPFS Integration** - Alternative decentralized storage
-- [ ] **QR Code Support** - Easy mobile seed phrase transfer
-- [ ] **Hardware Wallet Integration** - Ledger/Trezor support
-- [ ] **Batch Processing** - Multiple seed phrase operations
-
-### Version 2.2 (Q3 2025)
-- [ ] **PWA Features** - Full offline functionality
-- [ ] **Additional Languages** - Japanese, Korean, Portuguese
-- [ ] **Enhanced Security** - HSM integration options
-- [ ] **API Documentation** - For developers
-
-### Version 3.0 (Q4 2025)
-- [ ] **Web3 Integration** - Direct blockchain interaction
-- [ ] **Advanced Encryption** - Additional cipher options
-- [ ] **Social Recovery** - Shamir's Secret Sharing
-- [ ] **Enterprise Features** - Multi-user support
-
 ## ⚠️ Disclaimer
 
 **IMPORTANT SECURITY NOTICE**
