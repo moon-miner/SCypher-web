@@ -2138,7 +2138,7 @@ section,
     /* Nav menu móvil - mejorar spacing y apariencia */
     .nav-menu {
         position: fixed;
-        top: 70px; /* Ajustar para que no tape tanto */
+        top: 70px;
         left: -100%;
         width: 100%;
         height: calc(100vh - 70px);
@@ -2146,15 +2146,40 @@ section,
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        padding: 2rem 1rem;
+        padding: 1rem;
         transition: left 0.3s ease;
         box-shadow: var(--shadow-xl);
         border-right: 1px solid var(--border-color);
-        gap: 1.5rem; /* Mejor espaciado entre elementos */
+        gap: 1.5rem;
+        overflow-y: auto;
     }
 
     .nav-menu.active {
         left: 0;
+    }
+
+    /* NUEVO: Botón de cerrar en la parte superior del menú */
+    .nav-menu::before {
+        content: '✕ Cerrar Menú';
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 1rem;
+        background: var(--accent-color);
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid var(--accent-color);
+    }
+
+    .nav-menu::before:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
     /* Links del menú móvil */
@@ -2162,23 +2187,27 @@ section,
         font-size: 1.1rem;
         padding: 1rem 2rem;
         width: 100%;
+        max-width: 300px;
         text-align: center;
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         transition: all 0.3s ease;
         border: 1px solid transparent;
+        background: var(--bg-card);
     }
 
     .nav-menu .nav-link:hover,
     .nav-menu .nav-link.active {
-        background: rgba(124, 58, 237, 0.1);
+        background: var(--gradient-accent);
+        color: white;
         border-color: var(--accent-color);
         transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
     /* Theme toggle en menú móvil */
     .nav-theme {
-        margin: 1rem 0;
-        order: -1; /* Poner el theme toggle arriba */
+        margin: 0.5rem 0;
+        order: -1;
     }
 
     .theme-toggle {
@@ -2186,6 +2215,14 @@ section,
         font-size: 1rem;
         border-radius: 2rem;
         box-shadow: var(--shadow-md);
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+    }
+
+    .theme-toggle:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
     }
 
     .theme-option {
@@ -2195,16 +2232,26 @@ section,
 
     /* Language selector en menú móvil */
     .nav-lang {
-        margin-top: 1rem;
-        order: 99; /* Poner selector de idioma al final */
+        margin-top: 0.5rem;
+        order: 99;
     }
 
     .lang-select {
         padding: 0.75rem 1rem;
         font-size: 1rem;
         border-radius: 0.75rem;
-        min-width: 120px;
+        min-width: 140px;
         text-align: center;
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .lang-select:hover,
+    .lang-select:focus {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
     }
 
     /* Hamburger menu mejorado */
@@ -2216,6 +2263,8 @@ section,
         padding: 0.5rem;
         border-radius: 0.5rem;
         transition: all 0.3s ease;
+        position: relative;
+        z-index: 1001;
     }
 
     .nav-toggle:hover {
@@ -2233,6 +2282,7 @@ section,
     /* Animación del hamburger cuando está activo */
     .nav-menu.active ~ .nav-toggle span:nth-child(1) {
         transform: rotate(45deg) translate(6px, 6px);
+        background: var(--accent-color);
     }
 
     .nav-menu.active ~ .nav-toggle span:nth-child(2) {
@@ -2241,17 +2291,18 @@ section,
 
     .nav-menu.active ~ .nav-toggle span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
+        background: var(--accent-color);
     }
 
-    /* Backdrop blur para el menú */
-    .nav-menu.active::before {
+    /* Backdrop para cerrar haciendo click fuera */
+    .nav-menu.active::after {
         content: '';
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
         z-index: -1;
     }
@@ -2272,18 +2323,45 @@ section,
     .logo {
         font-size: 1.3rem;
     }
+
+    /* NUEVO: Indicador visual cuando menú está abierto */
+    .nav-menu.active ~ .nav-toggle::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 8px;
+        height: 8px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
 }
 
 /* Móviles extra pequeños */
 @media (max-width: 480px) {
     .nav-menu {
-        padding: 1.5rem 0.75rem;
-        gap: 1.25rem;
+        padding: 0.75rem;
+        gap: 1rem;
+        top: 65px;
+        height: calc(100vh - 65px);
+    }
+
+    .nav-menu::before {
+        font-size: 0.9rem;
+        padding: 0.875rem;
     }
 
     .nav-menu .nav-link {
         font-size: 1rem;
         padding: 0.875rem 1.5rem;
+        max-width: 280px;
     }
 
     .theme-toggle {
@@ -2299,7 +2377,7 @@ section,
     .lang-select {
         padding: 0.625rem 0.875rem;
         font-size: 0.9rem;
-        min-width: 100px;
+        min-width: 120px;
     }
 
     .navbar .container {
@@ -2314,20 +2392,15 @@ section,
     .logo {
         font-size: 1.2rem;
     }
-
-    .nav-menu {
-        top: 65px;
-        height: calc(100vh - 65px);
-    }
 }
 
 /* Fix para el z-index del menú */
 .nav-menu {
-    z-index: 999;
+    z-index: 1000;
 }
 
 .navbar {
-    z-index: 1000;
+    z-index: 1001;
 }
 
 /* Smooth transitions */
@@ -2345,4 +2418,28 @@ section,
 .lang-select:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
+}
+
+/* NUEVO: Shake animation para indicar que se puede cerrar */
+.nav-menu.active {
+    animation: slideInAndShake 0.5s ease-out;
+}
+
+@keyframes slideInAndShake {
+    0% {
+        left: -100%;
+    }
+    70% {
+        left: 0;
+    }
+    80% {
+        transform: translateX(-5px);
+    }
+    90% {
+        transform: translateX(5px);
+    }
+    100% {
+        left: 0;
+        transform: translateX(0);
+    }
 }
