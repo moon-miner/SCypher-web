@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCypher Journey</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #00ff88;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            animation: slideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #00ff88, #00ccff, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            color: #00ccff;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(0, 204, 255, 0.4);
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: #ffaa00;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+        }
+
+        p, li {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+            color: #e0e0e0;
+        }
+
+        .subtitle {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: #888;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        ul {
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+            list-style: none;
+        }
+
+        li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .highlight {
+            color: #00ff88;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem auto;
+            max-width: 600px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            color: #888;
+            font-size: 1rem;
+            z-index: 1000;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: -1;
+        }
+
+        .quote {
+            font-style: italic;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: #00ccff;
+            margin: 2rem auto;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .quote::before,
+        .quote::after {
+            content: '"';
+            font-size: 2em;
+            color: #00ff88;
+            position: absolute;
+        }
+
+        .quote::before {
+            top: -0.2em;
+            left: -0.5em;
+        }
+
+        .quote::after {
+            bottom: -0.5em;
+            right: -0.5em;
+        }
+
+        .link {
+            color: #00ccff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .link:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .title-slide {
+            background: radial-gradient(circle at center, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+        }
+
+        .conclusion-slide {
+            background: radial-gradient(circle at center, rgba(0, 204, 255, 0.1) 0%, transparent 70%);
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                width: 95vw;
+                padding: 1rem;
+                height: 85vh;
+            }
+            
+            .navigation {
+                bottom: 1rem;
+            }
+            
+            .slide-counter {
+                top: 1rem;
+                right: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .cyber-border {
+            border: 2px solid transparent;
+            background: linear-gradient(45deg, #00ff88, #00ccff) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: exclude;
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 1rem auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active title-slide">
+            <h1>🚀 My SCypher Adventure</h1>
+            <p class="subtitle">From wallet files to blockchain, with AI assistance</p>
+            <div style="margin-top: 3rem;">
+                <p style="font-size: clamp(1.2rem, 3vw, 1.6rem); color: #00ff88; font-weight: bold;">A cypherpunk journey of discovery</p>
+                <p style="font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: #888; margin-top: 1rem;">Built with obsession, Bash, and AI as copilot</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: I'm Not a Programmer -->
+        <div class="slide">
+            <h2>🛠️ I'm Not a Programmer</h2>
+            <ul>
+                <li>I can't write "hello world", but I can run it</li>
+                <li>I feel like <span class="highlight">a mechanic</span> who, with AI help, learns to design engine parts</li>
+                <li>Without <span class="highlight">ChatGPT</span> for research and <span class="highlight">Claude</span> for writing code, this would never have been possible</li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: It All Started with a Wallet -->
+        <div class="slide">
+            <h2>💡 It All Started with a Wallet</h2>
+            <ul>
+                <li>I encoded a <span class="highlight">Satergo</span> wallet file to Base64</li>
+                <li>Stored it inside a <span class="highlight">token on Ergo blockchain</span></li>
+                <li>With CLI commands and API calls, I managed to <span class="highlight">retrieve and reconstruct it</span></li>
+                <li>I understood something key:</li>
+            </ul>
+            <div class="quote">If I can save a wallet... I can save anything.</div>
+        </div>
+
+        <!-- Slide 4: The Challenge -->
+        <div class="slide">
+            <h2>🔐 The Challenge: Encrypt BIP39 Without Breaking Them</h2>
+            <ul>
+                <li>I wanted to encrypt seed phrases, but keep them <span class="highlight">valid</span> for any wallet</li>
+                <li>First attempt was shuffling the order with <span class="highlight">Fisher-Yates shuffle</span> based on password</li>
+                <li>But it failed the <span class="highlight">BIP39 checksum</span>. It wasn't valid.</li>
+            </ul>
+        </div>
+
+        <!-- Slide 5: From Mixing Words to Encrypting Bits -->
+        <div class="slide">
+            <h2>🧬 From Mixing Words to Encrypting Bits</h2>
+            <ul>
+                <li>I understood that BIP39 is a binary system, <span class="highlight">disguised as words</span></li>
+                <li>I started working at bit level:</li>
+                <li class="highlight">Convert phrase to binary</li>
+                <li class="highlight">Derive keystream with SHAKE-256</li>
+                <li class="highlight">Apply XOR</li>
+                <li class="highlight">Recalculate checksum</li>
+            </ul>
+            <div class="quote">Result: Another completely different phrase, but valid.</div>
+        </div>
+
+        <!-- Slide 6: Iterations and Evolution -->
+        <div class="slide">
+            <h2>🧪 Iterations and Evolution</h2>
+            <ul>
+                <li>From the beginning I added <span class="highlight">iterations</span> to strengthen keystream derivation</li>
+                <li>Later, I discovered <span class="highlight">Argon2id</span>: the ideal algorithm for this task</li>
+                <li>I decided SCypher's future will use <span class="highlight">only Argon2id, no custom iterations</span></li>
+                <li>I'm waiting for <span class="highlight">OpenSSL with Argon2id to be standard in Linux</span> for integration</li>
+            </ul>
+        </div>
+
+        <!-- Slide 7: SCypher v2.0 -->
+        <div class="slide">
+            <h2>⚙️ SCypher v2.0 – What I Built</h2>
+            <ul>
+                <li><span class="highlight">Deterministic and reversible</span> XOR encryption</li>
+                <li>Input and output: <span class="highlight">valid BIP39 phrases</span></li>
+                <li>Keystream derived with SHAKE-256</li>
+                <li>Automatic checksum recalculation</li>
+                <li><span class="highlight">No external dependencies</span>, only Bash + OpenSSL</li>
+                <li>UI with CRT amber colors, interactive menu</li>
+                <li>Basic environment audit and memory cleanup</li>
+            </ul>
+        </div>
+
+        <!-- Slide 8: Publishing Forever -->
+        <div class="slide">
+            <h2>🌐 Publishing It Forever</h2>
+            <ul>
+                <li>I compressed SCypher, split it into base64 fragments</li>
+                <li>Stored them on the <span class="highlight">Ergo blockchain</span></li>
+                <li>Created a web that:</li>
+                <li class="highlight">Retrieves pieces from blockchain</li>
+                <li class="highlight">Joins them automatically in browser</li>
+                <li class="highlight">Delivers final .xz file to user</li>
+                <li>Integration with <span class="highlight">Nautilus wallet</span> for donations</li>
+            </ul>
+            <div class="code-block">
+                <a href="https://scypher.vercel.app" class="link">🔗 scypher.vercel.app</a><br>
+                <a href="https://github.com/moon-miner/bash-BIP39-seed-cypher" class="link">🔗 GitHub Repository</a>
+            </div>
+        </div>
+
+        <!-- Slide 9: What I Learned -->
+        <div class="slide">
+            <h2>📚 What I Learned</h2>
+            <ul>
+                <li>BIP39 words <span class="highlight">are bits with a word mask</span></li>
+                <li>XOR can be powerful with a good keystream</li>
+                <li>BIP39 checksum <span class="highlight">is non-negotiable</span></li>
+                <li>Bash + AI can achieve incredible things</li>
+                <li>What matters isn't perfect programming, it's <span class="highlight">not giving up</span></li>
+                <li>Blockchain can be an <span class="highlight">eternal safe</span></li>
+            </ul>
+        </div>
+
+        <!-- Slide 10: Why I Did It -->
+        <div class="slide conclusion-slide">
+            <h2>🌍 Why I Did It?</h2>
+            <div class="quote">
+                Because a server can crash.<br>
+                Because a file can be deleted.<br>
+                But if you engrave it on the blockchain...<br>
+                <span class="highlight">it never gets lost.</span>
+            </div>
+            <div style="margin-top: 3rem; text-align: center;">
+                <p style="font-size: clamp(1.3rem, 3.5vw, 1.8rem); color: #00ff88; font-weight: bold; margin-bottom: 1rem;">SCypher is my cypherpunk contribution.</p>
+                <p style="font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: #e0e0e0;">Made with obsession, with Bash,</p>
+                <p style="font-size: clamp(1.1rem, 2.5vw, 1.4rem); color: #e0e0e0;">and with AI as copilot.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">10</span>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">← Previous</button>
+        <button class="nav-btn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            document.getElementById('currentSlide').textContent = index + 1;
+        }
+
+        function nextSlide() {
+            currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+            showSlide(currentSlideIndex);
+        }
+
+        function previousSlide() {
+            currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+            showSlide(currentSlideIndex);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Matrix background effect
+        function createMatrixEffect() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const matrixBg = document.getElementById('matrixBg');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            matrixBg.appendChild(canvas);
+
+            const chars = '01';
+            const columns = Math.floor(canvas.width / 20);
+            const drops = Array(columns).fill(1);
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff88';
+                ctx.font = '15px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * 20, drops[i] * 20);
+                    
+                    if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            setInterval(draw, 100);
+        }
+
+        // Initialize matrix effect
+        createMatrixEffect();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            document.getElementById('matrixBg').innerHTML = '';
+            createMatrixEffect();
+        });
+    </script>
+</body>
+</html>
