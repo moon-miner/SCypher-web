@@ -171,6 +171,137 @@
             z-index: 1000;
         }
 
+        .audio-controls {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+        }
+
+        .audio-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+        }
+
+        .audio-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+            transform: scale(1.05);
+        }
+
+        .audio-btn:active {
+            transform: scale(0.95);
+        }
+
+        .volume-container {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .audio-controls:hover .volume-container {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(0, 255, 136, 0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .volume-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+        }
+
+        .volume-indicator {
+            color: #888;
+            font-size: 0.8rem;
+            min-width: 30px;
+            text-align: center;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        .audio-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+        }
+
+        .audio-status.playing {
+            background: #00ff88;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
         .matrix-bg {
             position: fixed;
             top: 0;
@@ -235,15 +366,40 @@
                 padding: 1rem;
                 height: 85vh;
             }
-            
+
             .navigation {
                 bottom: 1rem;
             }
-            
+
             .slide-counter {
                 top: 1rem;
                 right: 1rem;
                 font-size: 0.9rem;
+            }
+
+            .audio-controls {
+                top: 6rem;
+                left: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+            }
+
+            .volume-container {
+                opacity: 1;
+                transform: translateX(0);
+                pointer-events: all;
+                margin-left: 0.5rem;
+            }
+
+            .volume-slider {
+                width: 100px;
+            }
+
+            .audio-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
             }
         }
 
@@ -262,7 +418,25 @@
 </head>
 <body>
     <div class="matrix-bg" id="matrixBg"></div>
-    
+
+    <!-- Audio Element -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="slide-music/Technology Digital Innovation by Infraction [No Copyright Music]  Late Show.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Audio Controls -->
+    <div class="audio-controls">
+        <button class="audio-btn" id="playPauseBtn" title="Play/Pause Music">
+            <span id="playIcon">⏵</span>
+            <div class="audio-status" id="audioStatus"></div>
+        </button>
+        <div class="volume-container">
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="10" title="Volume Control">
+            <span class="volume-indicator" id="volumeIndicator">10%</span>
+        </div>
+    </div>
+
     <div class="presentation-container">
         <!-- Slide 1: Title -->
         <div class="slide active title-slide">
@@ -406,7 +580,72 @@
         let currentSlideIndex = 0;
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
-        
+
+        // Audio elements and controls
+        const bgMusic = document.getElementById('bgMusic');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playIcon = document.getElementById('playIcon');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeIndicator = document.getElementById('volumeIndicator');
+        const audioStatus = document.getElementById('audioStatus');
+
+        // Initialize audio
+        bgMusic.volume = 0.10; // 10% default volume
+
+        // Audio control functions
+        function togglePlayPause() {
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    playIcon.textContent = '⏸';
+                    audioStatus.classList.add('playing');
+                    playPauseBtn.title = 'Pause Music';
+                }).catch(e => {
+                    console.log('Audio play failed:', e);
+                });
+            } else {
+                bgMusic.pause();
+                playIcon.textContent = '⏵';
+                audioStatus.classList.remove('playing');
+                playPauseBtn.title = 'Play Music';
+            }
+        }
+
+        function updateVolume() {
+            const volume = volumeSlider.value / 100;
+            bgMusic.volume = volume;
+            volumeIndicator.textContent = volumeSlider.value + '%';
+
+            // Update volume indicator color based on level
+            if (volume === 0) {
+                volumeIndicator.style.color = '#ff6b6b';
+            } else if (volume < 0.5) {
+                volumeIndicator.style.color = '#ffaa00';
+            } else {
+                volumeIndicator.style.color = '#00ff88';
+            }
+        }
+
+        // Event listeners for audio controls
+        playPauseBtn.addEventListener('click', togglePlayPause);
+
+        volumeSlider.addEventListener('input', updateVolume);
+
+        // Handle audio events
+        bgMusic.addEventListener('ended', () => {
+            playIcon.textContent = '⏵';
+            audioStatus.classList.remove('playing');
+            playPauseBtn.title = 'Play Music';
+        });
+
+        bgMusic.addEventListener('error', (e) => {
+            console.log('Audio error:', e);
+            playPauseBtn.style.opacity = '0.5';
+            playPauseBtn.title = 'Audio file not found';
+        });
+
+        // Initialize volume display
+        updateVolume();
+
         document.getElementById('totalSlides').textContent = totalSlides;
 
         function showSlide(index) {
@@ -427,10 +666,18 @@
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
+            if (e.key === 'ArrowRight') {
                 nextSlide();
             } else if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === ' ' && !e.target.closest('.audio-controls')) {
+                // Space bar for slides only if not focused on audio controls
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key.toLowerCase() === 'm') {
+                // 'M' key for music toggle
+                e.preventDefault();
+                togglePlayPause();
             }
         });
 
@@ -439,7 +686,7 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const matrixBg = document.getElementById('matrixBg');
-            
+
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             matrixBg.appendChild(canvas);
@@ -451,14 +698,14 @@
             function draw() {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+
                 ctx.fillStyle = '#00ff88';
                 ctx.font = '15px monospace';
-                
+
                 for (let i = 0; i < drops.length; i++) {
                     const text = chars[Math.floor(Math.random() * chars.length)];
                     ctx.fillText(text, i * 20, drops[i] * 20);
-                    
+
                     if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
                         drops[i] = 0;
                     }
@@ -476,6 +723,11 @@
         window.addEventListener('resize', () => {
             document.getElementById('matrixBg').innerHTML = '';
             createMatrixEffect();
+        });
+
+        // Prevent audio controls from interfering with slide navigation
+        document.querySelector('.audio-controls').addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     </script>
 </body>
