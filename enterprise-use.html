@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCypher - Deterministic Encrypted BIP39 Derivation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0b0d;
+            color: #e0e0e0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .crypto-grid {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(-50px, -50px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 255, 136, 0.6);
+            border-radius: 50%;
+            animation: float 10s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(0); opacity: 0; }
+            50% { transform: translate(var(--x), var(--y)) scale(1); opacity: 1; }
+        }
+
+        /* Slide container */
+        .slide-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #00ff88;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            color: #a0a0a0;
+            margin-bottom: 60px;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        ul {
+            list-style: none;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        li {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            margin-bottom: 25px;
+            padding-left: 40px;
+            position: relative;
+            line-height: 1.6;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        li:nth-child(1) { animation-delay: 0.1s; }
+        li:nth-child(2) { animation-delay: 0.2s; }
+        li:nth-child(3) { animation-delay: 0.3s; }
+        li:nth-child(4) { animation-delay: 0.4s; }
+        li:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-size: 1.5em;
+        }
+
+        strong {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        /* Special styling for key points */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 106, 0.05));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            max-width: 900px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        button {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Progress indicator */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff88, #00cc6a);
+            transition: width 0.8s ease;
+            z-index: 1000;
+        }
+
+        /* Slide counter */
+        .slide-counter {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            font-size: 18px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Logo/Brand */
+        .logo {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #00ff88;
+            letter-spacing: -0.02em;
+        }
+
+        /* Special slides */
+        .title-slide {
+            background: radial-gradient(ellipse at center, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+        }
+
+        .thank-you-slide {
+            text-align: center;
+        }
+
+        .thank-you-slide h1 {
+            font-size: clamp(4rem, 8vw, 6rem);
+            margin-bottom: 60px;
+        }
+
+        /* Links styling */
+        a {
+            color: #00ff88;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        a:hover {
+            border-bottom-color: #00ff88;
+        }
+
+        /* Code/tech styling */
+        .code-highlight {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+            
+            .nav-buttons {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .logo, .slide-counter {
+                display: none;
+            }
+        }
+
+        /* Glow effect for important elements */
+        .glow {
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Fade in animation for slides */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .slide.active .content {
+            animation: slideIn 0.8s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-animation">
+        <div class="crypto-grid"></div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progress"></div>
+
+    <!-- Logo -->
+    <div class="logo">SCypher</div>
+
+    <!-- Slide counter -->
+    <div class="slide-counter" id="counter">1 / 10</div>
+
+    <!-- Slides container -->
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active title-slide">
+            <div class="content">
+                <h1 class="glow">SCypher: Deterministic Encrypted BIP39 Derivation</h1>
+                <p class="subtitle">Enterprise-grade seed phrase management for the blockchain era</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is SCypher? -->
+        <div class="slide">
+            <div class="content">
+                <h2>What is SCypher?</h2>
+                <ul>
+                    <li>SCypher is a tool that enables deterministic encryption of BIP39 seed phrases.</li>
+                    <li>From one master seed and a password, SCypher generates a new, valid BIP39 phrase.</li>
+                    <li>The resulting phrase is reversible only with the correct password.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Core Innovation -->
+        <div class="slide">
+            <div class="content">
+                <h2>The Core Innovation</h2>
+                <div class="highlight-box">
+                    <ul>
+                        <li><strong>All output phrases are valid BIP39 mnemonics.</strong></li>
+                        <li><strong>Symmetric and deterministic encryption:</strong> Reversible if and only if password is known.</li>
+                        <li>Enables use of derived wallets without ever exposing or using the master seed directly.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Enterprise-Grade Potential -->
+        <div class="slide">
+            <div class="content">
+                <h2>Enterprise-Grade Potential</h2>
+                <ul>
+                    <li><strong>One master seed → thousands of operational wallets.</strong></li>
+                    <li>No need to store derived phrases: regenerate them at any time using password.</li>
+                    <li>Perfect for:
+                        <ul style="margin-top: 15px; margin-left: 40px;">
+                            <li style="font-size: 1.4rem;">Access compartmentalization.</li>
+                            <li style="font-size: 1.4rem;">Automated key generation for smart contracts.</li>
+                            <li style="font-size: 1.4rem;">Delegation of funds to departments or users.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Operational Delegation -->
+        <div class="slide">
+            <div class="content">
+                <h2>Operational Delegation</h2>
+                <ul>
+                    <li>SCypher enables secure delegation of derived seed phrases to trusted personnel.</li>
+                    <li>Each derived seed is valid and usable on its own.</li>
+                    <li>Perfect for giving strategic employees the ability to sign transactions — without ever exposing the master seed.</li>
+                    <li>Each employee can be assigned a unique derived phrase using a password only known to the administrator.</li>
+                    <li>If needed, access can be revoked or rotated by generating a new derived phrase.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 6: Security by Design -->
+        <div class="slide">
+            <div class="content">
+                <h2>Security by Design</h2>
+                <ul>
+                    <li>Derived phrases do not reveal the master seed.</li>
+                    <li>Even if the password is guessed and the master is reached, it's indistinguishable from any other derived seed.</li>
+                    <li>Argon2id integration adds powerful brute-force resistance.</li>
+                    <li>When passwords are strong and diverse, reverse-engineering the system becomes computationally unfeasible.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: Attack Scenarios and Real-World Protection -->
+        <div class="slide">
+            <div class="content">
+                <h2>Attack Scenarios and Real-World Protection</h2>
+                <ul>
+                    <li>If the master seed is never used directly, there is no external reference to identify it.</li>
+                    <li>Attacker who compromises one or more derived seeds:
+                        <ul style="margin-top: 15px; margin-left: 40px;">
+                            <li style="font-size: 1.4rem;">Cannot confirm their relation.</li>
+                            <li style="font-size: 1.4rem;">Cannot verify a correct password guess.</li>
+                            <li style="font-size: 1.4rem;">Cannot recognize the master seed if reached.</li>
+                        </ul>
+                    </li>
+                    <li>Strong KDF (Argon2id) makes brute force attempts extremely slow.</li>
+                    <li>Clear advantage for real-world systems needing hierarchical, segmented access.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 8: Technical Foundations -->
+        <div class="slide">
+            <div class="content">
+                <h2>Technical Foundations</h2>
+                <ul>
+                    <li>Fully implemented in Bash, no external dependencies.</li>
+                    <li>Optional Rust implementation for future hardened usage.</li>
+                    <li>Uses reversible XOR encryption seeded from password-derived entropy.</li>
+                    <li>Output passes checksum and entropy validation for BIP39 compliance.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 9: Disclaimer and Research Frontiers -->
+        <div class="slide">
+            <div class="content">
+                <h2>Disclaimer and Research Frontiers</h2>
+                <ul>
+                    <li>SCypher is cryptographically sound <strong>based on current understanding and careful testing.</strong></li>
+                    <li>Not yet formally audited.</li>
+                    <li>Anyone using SCypher in mission-critical systems should conduct independent review.</li>
+                    <li>Contributions welcome to strengthen, port, and test the system under diverse threat models.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 10: Call to Action -->
+        <div class="slide">
+            <div class="content">
+                <h2>Call to Action</h2>
+                <ul>
+                    <li>SCypher is free and open-source.</li>
+                    <li>Learn more:
+                        <ul style="margin-top: 15px; margin-left: 40px;">
+                            <li style="font-size: 1.4rem;">Website: <a href="https://scypher.vercel.app" target="_blank">https://scypher.vercel.app</a></li>
+                            <li style="font-size: 1.4rem;">GitHub: <a href="https://github.com/moon-miner/bash-BIP39-seed-cypher" target="_blank">https://github.com/moon-miner/bash-BIP39-seed-cypher</a></li>
+                        </ul>
+                    </li>
+                    <li>Help build the future of deterministic encrypted seed management.</li>
+                    <li>Ideal for companies, institutions, and developers.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 11: Thank You -->
+        <div class="slide thank-you-slide">
+            <div class="content">
+                <h1>Thank You</h1>
+                <div class="highlight-box">
+                    <ul>
+                        <li>Designed with purpose.</li>
+                        <li>Built to empower.</li>
+                        <li><strong>SCypher: because one seed should be enough.</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-buttons">
+        <button id="prevBtn" onclick="changeSlide(-1)">Previous</button>
+        <button id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const progress = document.getElementById('progress');
+        const counter = document.getElementById('counter');
+
+        // Create floating particles
+        function createParticles() {
+            const bgAnimation = document.querySelector('.bg-animation');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.setProperty('--x', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.setProperty('--y', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                bgAnimation.appendChild(particle);
+            }
+        }
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index < currentSlide) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            // Update progress bar
+            progress.style.width = ((currentSlide + 1) / totalSlides) * 100 + '%';
+
+            // Update counter
+            counter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+
+            // Reset animations for list items
+            const currentSlideElement = slides[currentSlide];
+            const listItems = currentSlideElement.querySelectorAll('li');
+            listItems.forEach((item, index) => {
+                item.style.animation = 'none';
+                setTimeout(() => {
+                    item.style.animation = `fadeInUp 0.6s ease-out forwards`;
+                    item.style.animationDelay = `${index * 0.1}s`;
+                }, 50);
+            });
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateSlide();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Home') {
+                currentSlide = 0;
+                updateSlide();
+            }
+            if (e.key === 'End') {
+                currentSlide = totalSlides - 1;
+                updateSlide();
+            }
+        });
+
+        // Touch navigation for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) changeSlide(1);
+            if (touchEndX > touchStartX + 50) changeSlide(-1);
+        }
+
+        // Initialize
+        createParticles();
+        updateSlide();
+
+        // Add some subtle animations to the grid
+        setInterval(() => {
+            const grid = document.querySelector('.crypto-grid');
+            if (grid) {
+                grid.style.opacity = 0.2 + Math.random() * 0.2;
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
