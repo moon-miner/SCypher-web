@@ -6,6 +6,40 @@ const NANOERGS_PER_ERG = 1000000000n;
 const MIN_FEE = 1000000n; // 0.001 ERG
 const FEE_ERGOTREE = "1005040004000e36100204a00b08cd0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ea02d192a39a8cc7a701730073011001020402d19683030193a38cc7b2a57300000193c2b2a57301007473027303830108cdeeac93b1a57304";
 
+// Función para convertir nanoERGs a ERGs con precisión decimal
+function formatERGFromNanoERG(nanoErgs, decimals = 3) {
+    try {
+        const nanoErgsBig = BigInt(nanoErgs);
+        const divisor = BigInt(NANOERGS_PER_ERG); // 1000000000n
+
+        // Obtener parte entera
+        const integerPart = nanoErgsBig / divisor;
+
+        // Obtener parte decimal
+        const remainder = nanoErgsBig % divisor;
+
+        // Convertir remainder a decimal string
+        const remainderStr = remainder.toString().padStart(9, '0'); // 9 decimales máximo
+
+        // Truncar a los decimales deseados
+        const decimalPart = remainderStr.substring(0, decimals);
+
+        // Combinar y remover ceros innecesarios al final
+        const result = `${integerPart}.${decimalPart}`;
+        return parseFloat(result).toString();
+
+    } catch (error) {
+        console.error('Error formatting ERG:', error);
+        return '0.000';
+    }
+}
+
+// Versión alternativa más simple
+function formatERGSimple(nanoErgs, decimals = 3) {
+    const ergs = Number(nanoErgs) / 1000000000;
+    return ergs.toFixed(decimals);
+}
+
 // State
 let isWalletConnected = false;
 let selectedAmount = 0;
@@ -167,7 +201,7 @@ async function connectWallet() {
             console.log('✅ API context obtained');
 
             const balance = await ergoApi.get_balance();
-            const balanceERG = Number(BigInt(balance) / NANOERGS_PER_ERG);
+            const balanceERG = formatERGFromNanoERG(balance, 3);
 
             console.log('💰 Wallet balance:', balanceERG, 'ERG');
 
@@ -177,7 +211,7 @@ async function connectWallet() {
 
             if (statusElement) statusElement.classList.add('connected');
             if (statusText) {
-                statusText.textContent = `Connected - Balance: ${balanceERG.toFixed(3)} ERG`;
+                statusText.textContent = `Connected - Balance: ${balanceERG} ERG`;
             }
 
             connectBtn.textContent = '✓ Wallet Connected';
