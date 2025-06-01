@@ -1472,8 +1472,31 @@ function validateTransaction(transaction) {
  * @param {BigInt} nanoErgs - Cantidad en nanoERGs
  * @returns {string} Cantidad formateada en ERG
  */
-function formatERG(nanoErgs) {
-    return (Number(nanoErgs) / Number(NANOERGS_PER_ERG)).toFixed(9);
+function formatERGFromNanoERG(nanoErgs, decimals = 3) {
+    try {
+        const nanoErgsBig = BigInt(nanoErgs);
+        const divisor = BigInt(NANOERGS_PER_ERG); // 1000000000n
+
+        // Obtener parte entera
+        const integerPart = nanoErgsBig / divisor;
+
+        // Obtener parte decimal
+        const remainder = nanoErgsBig % divisor;
+
+        // Convertir remainder a decimal string
+        const remainderStr = remainder.toString().padStart(9, '0');
+
+        // Truncar a los decimales deseados
+        const decimalPart = remainderStr.substring(0, decimals);
+
+        // Combinar y remover ceros innecesarios al final
+        const result = `${integerPart}.${decimalPart}`;
+        return parseFloat(result).toString();
+
+    } catch (error) {
+        console.error('Error formatting ERG:', error);
+        return '0.000';
+    }
 }
 
 /**
@@ -1497,7 +1520,7 @@ async function getWalletInfo() {
     });
 
     return {
-        ergBalance: formatERG(BigInt(balance)),
+        ergBalance: formatERGFromNanoERG(balance, 3),
         utxoCount: utxos.length,
         tokenTypes: allTokens.size,
         tokens: Array.from(allTokens.entries()).map(([id, amount]) => ({
