@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCypher - XOR-based BIP39 Seed Cipher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+            color: #F9FAFB;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #60A5FA;
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Presentation container */
+        .presentation-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 80px;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide.prev {
+            transform: translateX(-100px);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: clamp(3.5rem, 6vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #60A5FA, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #F9FAFB;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        h3 {
+            font-size: clamp(1.8rem, 2.5vw, 2.2rem);
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #60A5FA;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: clamp(1.4rem, 2vw, 1.8rem);
+            color: #E5E7EB;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 300;
+            line-height: 1.4;
+        }
+
+        p {
+            font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+            line-height: 1.6;
+            color: #E5E7EB;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 25px;
+        }
+
+        /* Special components */
+        .tagline {
+            font-size: clamp(1.6rem, 2.5vw, 2rem);
+            color: #60A5FA;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .key-message {
+            background: rgba(96, 165, 250, 0.1);
+            border: 2px solid rgba(96, 165, 250, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 800px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Technical formula */
+        .formula {
+            background: rgba(17, 24, 39, 0.8);
+            border: 2px solid rgba(96, 165, 250, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            color: #FDE68A;
+            text-align: center;
+            margin: 30px auto;
+            max-width: 700px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Steps grid - Better distribution for 4 steps */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 25px;
+            margin: 40px auto;
+            width: 100%;
+            max-width: 800px;
+            min-height: 320px;
+        }
+
+        .step-card {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 140px;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(96, 165, 250, 0.6);
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.2);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #60A5FA, #34D399);
+            color: #1F2937;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #F9FAFB;
+            margin-bottom: 10px;
+        }
+
+        .step-desc {
+            font-size: 0.95rem;
+            color: #E5E7EB;
+            line-height: 1.4;
+        }
+
+        /* Demo visualization */
+        .demo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .master-seed {
+            background: rgba(52, 211, 153, 0.1);
+            border: 2px solid rgba(52, 211, 153, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .master-label {
+            font-size: 1rem;
+            color: #34D399;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .seed-phrase {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+            color: #F9FAFB;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .derivation-flow {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .derivation-item {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .derivation-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(96, 165, 250, 0.2);
+        }
+
+        .password-label {
+            font-size: 0.9rem;
+            color: #60A5FA;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .password {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            color: #FDE68A;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .derived-label {
+            font-size: 0.8rem;
+            color: #A78BFA;
+            margin-bottom: 8px;
+        }
+
+        .derived-seed {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.75rem;
+            color: #E5E7EB;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 4px;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        .use-case {
+            font-size: 0.8rem;
+            color: #9CA3AF;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        /* Use cases grid */
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .use-case-card {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .use-case-card:hover {
+            transform: translateY(-5px);
+            border-color: #60A5FA;
+            box-shadow: 0 15px 40px rgba(96, 165, 250, 0.2);
+        }
+
+        .use-case-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .use-case-icon {
+            font-size: 1.8rem;
+        }
+
+        .use-case-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #F9FAFB;
+        }
+
+        .scenario {
+            margin-bottom: 20px;
+        }
+
+        .scenario-title {
+            font-size: 1rem;
+            color: #60A5FA;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .scenario-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .scenario-list li {
+            padding: 6px 0 6px 20px;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #E5E7EB;
+        }
+
+        .scenario-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #34D399;
+            font-weight: bold;
+        }
+
+        /* Comparison table - Fixed height and no scroll */
+        .comparison-container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 30px auto;
+            height: auto;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(55, 65, 81, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            table-layout: fixed;
+        }
+
+        .comparison-table th {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60A5FA;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .comparison-table th:first-child {
+            width: 35%;
+        }
+
+        .comparison-table th:nth-child(2),
+        .comparison-table th:nth-child(3) {
+            width: 32.5%;
+        }
+
+        .comparison-table td {
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.1);
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .comparison-table td:first-child {
+            color: #93C5FD;
+            font-weight: 500;
+            min-width: 200px;
+        }
+
+        .comparison-table td:nth-child(2),
+        .comparison-table td:nth-child(3) {
+            color: #E5E7EB;
+        }
+
+        /* Benefits grid */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .benefit-card {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #60A5FA;
+            box-shadow: 0 15px 40px rgba(96, 165, 250, 0.25);
+        }
+
+        .benefit-icon {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .benefit-title {
+            font-size: 1rem;
+            color: #F9FAFB;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* Download methods */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .download-card {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .download-card:hover {
+            transform: translateY(-5px);
+            border-color: #60A5FA;
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.2);
+        }
+
+        .download-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .download-icon {
+            font-size: 1.5rem;
+        }
+
+        .download-title {
+            font-size: 1.1rem;
+            color: #60A5FA;
+            font-weight: 600;
+        }
+
+        .download-content {
+            flex-grow: 1;
+        }
+
+        .download-url {
+            color: #34D399;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .download-url:hover {
+            color: #10B981;
+        }
+
+        .code-block {
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.75rem;
+            color: #FDE68A;
+            overflow-x: auto;
+            line-height: 1.4;
+        }
+
+        /* Final slide styling */
+        .final-slide {
+            background: radial-gradient(ellipse at center, rgba(96, 165, 250, 0.1) 0%, transparent 70%);
+        }
+
+        .final-message {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 700;
+            color: #F9FAFB;
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.3;
+        }
+
+        .final-highlight {
+            color: #60A5FA;
+        }
+
+        .final-tagline {
+            font-size: clamp(1.2rem, 2vw, 1.5rem);
+            color: #E5E7EB;
+            font-weight: 300;
+            font-style: italic;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(31, 41, 55, 0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #60A5FA;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(96, 165, 250, 0.1);
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            color: #4B5563;
+            cursor: not-allowed;
+        }
+
+        .nav-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4B5563;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-dot.active {
+            background: #60A5FA;
+            transform: scale(1.5);
+        }
+
+        .slide-counter {
+            color: #9CA3AF;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #60A5FA, #34D399);
+            transition: width 0.6s ease;
+            z-index: 1001;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+            
+            .steps-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, auto);
+                height: auto;
+            }
+            
+            .derivation-flow {
+                grid-template-columns: 1fr;
+            }
+            
+            .use-cases-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .benefits-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .navigation {
+                bottom: 20px;
+                padding: 12px 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide.active * {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background particles -->
+    <div class="bg-particles" id="particles"></div>
+    
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progress"></div>
+
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>SCypher</h1>
+            <p class="tagline">XOR-based BIP39 Seed Cipher</p>
+            <div class="key-message">
+                <p class="subtitle">One master. Many derived wallets. Encrypted. Reversible. Secure.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is SCypher? -->
+        <div class="slide">
+            <h2>What is SCypher?</h2>
+            <div class="key-message">
+                <p>SCypher is a tool that enables deterministic encryption of BIP39 seed phrases with a password, generating new valid BIP39 phrases without ever exposing the original master seed.</p>
+            </div>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <span class="benefit-icon">🔐</span>
+                    <div class="benefit-title">One master = many secure wallets</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🔄</span>
+                    <div class="benefit-title">Reversible with same password</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🧩</span>
+                    <div class="benefit-title">Unique BIP39 output per user</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🛡️</span>
+                    <div class="benefit-title">Offline use, no server required</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🚫</span>
+                    <div class="benefit-title">One leak doesn't compromise the rest</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🧠</span>
+                    <div class="benefit-title">No need to store derived seeds – can regenerate on demand</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: How it Works -->
+        <div class="slide">
+            <h2>How SCypher Works</h2>
+            <div class="formula">
+                Seed + Password + Iterations → XOR → Encrypted Seed
+            </div>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Convert seed to binary</div>
+                    <div class="step-desc">Each BIP39 word represents 11 bits of entropy</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generate keystream</div>
+                    <div class="step-desc">From password + iterations using SHAKE-256</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">XOR operation</div>
+                    <div class="step-desc">Reversible encryption between keystream and seed</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Convert back to BIP39</div>
+                    <div class="step-desc">Valid seed phrase with correct checksum</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Multiple Derivation Demo -->
+        <div class="slide">
+            <h2>Multiple Derivation in Action</h2>
+            <div class="demo-container">
+                <div class="master-seed">
+                    <div class="master-label">MASTER SEED (stored once, securely)</div>
+                    <div class="seed-phrase">abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about</div>
+                </div>
+                
+                <div class="derivation-flow">
+                    <div class="derivation-item">
+                        <div class="password-label">+ Password:</div>
+                        <div class="password">"Bob-Dev"</div>
+                        <div class="derived-label">→ Derived Seed 1:</div>
+                        <div class="derived-seed">forest luxury diamond ocean purple electric morning cloud silver mountain perfect storm</div>
+                        <div class="use-case">Use: Developer Testing Environment</div>
+                    </div>
+                    
+                    <div class="derivation-item">
+                        <div class="password-label">+ Password:</div>
+                        <div class="password">"Treasury-001"</div>
+                        <div class="derived-label">→ Derived Seed 2:</div>
+                        <div class="derived-seed">matrix noble window fabric tower gentle soccer rapid hidden mesh gather victory</div>
+                        <div class="use-case">Use: Company Treasury Operations</div>
+                    </div>
+                    
+                    <div class="derivation-item">
+                        <div class="password-label">+ Password:</div>
+                        <div class="password">"Exchange-Hot"</div>
+                        <div class="derived-label">→ Derived Seed 3:</div>
+                        <div class="derived-seed">quantum bridge stellar myth cosmic dawn infinity loop crystal wave harmony light</div>
+                        <div class="use-case">Use: Exchange Hot Wallet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Personal Use Cases -->
+        <div class="slide">
+            <h2>Personal Use Cases</h2>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🔒</span>
+                        <span class="use-case-title">Secure Storage</span>
+                    </div>
+                    <div class="scenario">
+                        <div class="scenario-title">Scenario A:</div>
+                        <ul class="scenario-list">
+                            <li>Encrypt your seed with a password</li>
+                            <li>Store the encrypted seed physically</li>
+                            <li>Use password to recover original when needed</li>
+                            <li>Master seed never leaves secure storage</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🌳</span>
+                        <span class="use-case-title">Multi-Derivation</span>
+                    </div>
+                    <div class="scenario">
+                        <div class="scenario-title">Scenario B:</div>
+                        <ul class="scenario-list">
+                            <li>Keep ONE master seed physically secure</li>
+                            <li>Derive multiple seeds with different passwords</li>
+                            <li>One seed → many wallets (exchange, DeFi, savings)</li>
+                            <li>Rotate wallets by changing passwords</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Enterprise Use Cases -->
+        <div class="slide">
+            <h2>Enterprise Use Cases</h2>
+            <div class="use-case-card" style="max-width: 900px; margin: 0 auto;">
+                <div class="use-case-header">
+                    <span class="use-case-icon">🏢</span>
+                    <span class="use-case-title">Organizational Delegation & Access Control</span>
+                </div>
+                <ul class="scenario-list" style="font-size: 1.1rem; line-height: 1.6;">
+                    <li>Organization holds one master seed in secure cold storage</li>
+                    <li>Uses internal passwords per user/device/department (never shared externally)</li>
+                    <li>Generates valid BIP39 phrase per user without exposing master</li>
+                    <li>Each employee receives only their derived phrase</li>
+                    <li>If a user wallet is compromised, others remain completely safe</li>
+                    <li>Perfect for delegation: signing authority, fund management, smart contracts</li>
+                    <li>Easy access revocation when employees leave</li>
+                    <li>No need to store hundreds of derived seeds - regenerate on demand</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: BIP39 Passphrase vs SCypher Comparison -->
+        <div class="slide">
+            <h2>BIP39 Passphrase vs SCypher</h2>
+            <div class="comparison-container">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Practical Use Case</th>
+                            <th>BIP39 Passphrase</th>
+                            <th>SCypher Encryption</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Requires the original (master) seed</td>
+                            <td>✅ Yes, always</td>
+                            <td>❌ No, each derived seed is self-contained</td>
+                        </tr>
+                        <tr>
+                            <td>Generates different usable wallets</td>
+                            <td>✅ Yes</td>
+                            <td>✅ Yes</td>
+                        </tr>
+                        <tr>
+                            <td>Output format</td>
+                            <td>🔐 Same seed + hidden passphrase logic</td>
+                            <td>🧩 New valid BIP39 seed (independent)</td>
+                        </tr>
+                        <tr>
+                            <td>Applying BIP39 passphrase</td>
+                            <td>🔁 Already built into derivation, not reapplicable</td>
+                            <td>✅ Can optionally apply passphrase to the derived seed</td>
+                        </tr>
+                        <tr>
+                            <td>Regeneration / Exposure Risk</td>
+                            <td>🔁 Requires master seed + passphrase. If master leaks, brute-force is possible</td>
+                            <td>✅ Can regenerate or rotate safely. One leak doesn't expose master or others</td>
+                        </tr>
+                        <tr>
+                            <td>Risk when user leaves organization</td>
+                            <td>🔴 If master seed was leaked, all wallets are at risk of brute-force</td>
+                            <td>🟢 Only their derived seed is exposed, others and master remain safe</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 8: Security & Attack Resistance -->
+        <div class="slide">
+            <h2>Security & Attack Resistance</h2>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🛡️</span>
+                        <span class="use-case-title">Design Security</span>
+                    </div>
+                    <ul class="scenario-list">
+                        <li>XOR reversible encryption with password-derived keystream</li>
+                        <li>SHAKE-256 (current) and Argon2id (future) as KDFs</li>
+                        <li>Output always valid BIP39 (entropy + checksum)</li>
+                        <li>Derived seeds don't reveal master seed</li>
+                    </ul>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🔍</span>
+                        <span class="use-case-title">Attack Resistance</span>
+                    </div>
+                    <ul class="scenario-list">
+                        <li>Even if attacker guesses correct password, <strong>cannot identify the master</strong></li>
+                        <li>Each derived seed appears as valid standalone seed</li>
+                        <li><strong>No verification mechanism</strong> - attacker can't confirm correct guess</li>
+                        <li>Argon2id adds powerful brute-force resistance</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="key-message">
+                <p><strong>Security by design:</strong> When passwords are strong and diverse, reverse-engineering becomes computationally unfeasible, even with multiple compromised derived seeds.</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Download & Adoption -->
+        <div class="slide">
+            <h2>Download & Get Started</h2>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-header">
+                        <span class="download-icon">🌐</span>
+                        <span class="download-title">Web Interface</span>
+                    </div>
+                    <div class="download-content">
+                        <p>Visit: <a href="https://scypher.vercel.app" target="_blank" class="download-url">https://scypher.vercel.app</a></p>
+                        <p style="margin-top: 15px;">Click "Download from Blockchain" for verified code</p>
+                    </div>
+                </div>
+                
+                <div class="download-card">
+                    <div class="download-header">
+                        <span class="download-icon">💻</span>
+                        <span class="download-title">CLI (Blockchain)</span>
+                    </div>
+                    <div class="download-content">
+                        <div class="code-block">curl -X GET "https://api.sigmaspace.io/.../272e6..." \
+  | jq -r '.description' | base64 -d > SCypher.sh
+chmod +x SCypher.sh && ./SCypher.sh</div>
+                    </div>
+                </div>
+                
+                <div class="download-card">
+                    <div class="download-header">
+                        <span class="download-icon">🔧</span>
+                        <span class="download-title">GitHub Repository</span>
+                    </div>
+                    <div class="download-content">
+                        <div class="code-block">git clone https://github.com/moon-miner/scypher.git
+cd scypher && chmod +x SCypher.sh</div>
+                        <p style="margin-top: 10px;">Full source code, documentation & examples</p>
+                    </div>
+                </div>
+            </div>
+            <div class="key-message">
+                <p><strong>Technical Features:</strong> No external dependencies • Pure Bash implementation • Offline use • Open source & auditable</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: Call to Action -->
+        <div class="slide">
+            <h2>Help Build the Future</h2>
+            <div class="key-message">
+                <p>SCypher is free, open-source, and ready for collaboration. Help us build a safer ecosystem for seed phrase management.</p>
+            </div>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🔬</span>
+                        <span class="use-case-title">For Researchers</span>
+                    </div>
+                    <ul class="scenario-list">
+                        <li>Cryptographic analysis and formal verification</li>
+                        <li>Security audits and penetration testing</li>
+                        <li>Academic research on deterministic encryption</li>
+                    </ul>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="use-case-header">
+                        <span class="use-case-icon">🏗️</span>
+                        <span class="use-case-title">For Developers</span>
+                    </div>
+                    <ul class="scenario-list">
+                        <li>Integration into wallet software</li>
+                        <li>Enterprise key management solutions</li>
+                        <li>Multi-language implementations</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <span class="benefit-icon">🌍</span>
+                    <div class="benefit-title">Global Impact</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🔓</span>
+                    <div class="benefit-title">Open Source</div>
+                </div>
+                <div class="benefit-card">
+                    <span class="benefit-icon">🤝</span>
+                    <div class="benefit-title">Community Driven</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Final Message -->
+        <div class="slide final-slide">
+            <div class="final-message">
+                <span class="final-highlight">SCypher</span><br>
+                Because one seed should be enough.
+            </div>
+            <p class="final-tagline">Transform. Secure. Scale.</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">‹</button>
+        <div class="nav-dots" id="navDots"></div>
+        <div class="slide-counter" id="counter">1 / 11</div>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">›</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        // Create background particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Create navigation dots
+        const navDotsContainer = document.getElementById('navDots');
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('nav-dot');
+            if (i === 0) dot.classList.add('active');
+            dot.onclick = () => goToSlide(i);
+            navDotsContainer.appendChild(dot);
+        }
+
+        const navDots = document.querySelectorAll('.nav-dot');
+
+        function updateSlide() {
+            // Update slides
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index < currentSlide) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            // Update progress bar
+            document.getElementById('progress').style.width = ((currentSlide + 1) / totalSlides) * 100 + '%';
+
+            // Update navigation
+            navDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+            
+            // Update counter
+            document.getElementById('counter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < totalSlides) {
+                currentSlide = newSlide;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(n) {
+            if (n !== currentSlide && n >= 0 && n < totalSlides) {
+                currentSlide = n;
+                updateSlide();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Home') goToSlide(0);
+            if (e.key === 'End') goToSlide(totalSlides - 1);
+        });
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) changeSlide(1);
+            if (touchEndX > touchStartX + 50) changeSlide(-1);
+        }
+
+        // Auto-start particles when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            updateSlide();
+        });
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>
