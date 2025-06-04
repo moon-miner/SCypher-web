@@ -1,4 +1,4 @@
-// translations.js - Updated with new How It Works section and improved download messages
+// translations.js - Complete updated version with copy address and QR modal functionality
 
 const translations = {
     en: {
@@ -105,7 +105,18 @@ const translations = {
             selectAmount: "Select donation amount (ERG):",
             address: "Donation Address:",
             connectBtn: "Connect Nautilus Wallet",
-            donateBtn: "Donate"
+            donateBtn: "Donate",
+            // NEW: Copy and QR functionality
+            copyBtn: "Copy",
+            qrBtn: "QR",
+            copied: "Copied!",
+            copyFailed: "Failed",
+            qrModal: {
+                title: "Donation QR Code",
+                instructions: "Scan this QR code with your Ergo wallet to donate",
+                copyAddress: "Copy Address",
+                close: "Close"
+            }
         },
         footer: {
             text: "Open source BIP39 seed cipher stored on Ergo blockchain"
@@ -215,7 +226,18 @@ const translations = {
             selectAmount: "Selecciona el monto de donación (ERG):",
             address: "Dirección de Donación:",
             connectBtn: "Conectar Nautilus Wallet",
-            donateBtn: "Donar"
+            donateBtn: "Donar",
+            // NUEVO: Funcionalidad de copiar y QR
+            copyBtn: "Copiar",
+            qrBtn: "QR",
+            copied: "¡Copiado!",
+            copyFailed: "Error",
+            qrModal: {
+                title: "Código QR de Donación",
+                instructions: "Escanea este código QR con tu billetera Ergo para donar",
+                copyAddress: "Copiar Dirección",
+                close: "Cerrar"
+            }
         },
         footer: {
             text: "Cifrador BIP39 de código abierto almacenado en la blockchain de Ergo"
@@ -325,7 +347,18 @@ const translations = {
             selectAmount: "选择捐赠金额 (ERG)：",
             address: "捐赠地址：",
             connectBtn: "连接 Nautilus 钱包",
-            donateBtn: "捐赠"
+            donateBtn: "捐赠",
+            // 新增：复制和二维码功能
+            copyBtn: "复制",
+            qrBtn: "二维码",
+            copied: "已复制！",
+            copyFailed: "失败",
+            qrModal: {
+                title: "捐赠二维码",
+                instructions: "用您的 Ergo 钱包扫描此二维码进行捐赠",
+                copyAddress: "复制地址",
+                close: "关闭"
+            }
         },
         footer: {
             text: "存储在 Ergo 区块链上的开源 BIP39 种子密码器"
@@ -435,7 +468,18 @@ const translations = {
             selectAmount: "Spendenbetrag auswählen (ERG):",
             address: "Spendenadresse:",
             connectBtn: "Nautilus Wallet verbinden",
-            donateBtn: "Spenden"
+            donateBtn: "Spenden",
+            // NEU: Kopieren und QR-Funktionalität
+            copyBtn: "Kopieren",
+            qrBtn: "QR",
+            copied: "Kopiert!",
+            copyFailed: "Fehler",
+            qrModal: {
+                title: "Spenden-QR-Code",
+                instructions: "Scannen Sie diesen QR-Code mit Ihrer Ergo-Wallet zum Spenden",
+                copyAddress: "Adresse kopieren",
+                close: "Schließen"
+            }
         },
         footer: {
             text: "Open-Source-BIP39-Seed-Verschlüsseler auf der Ergo-Blockchain gespeichert"
@@ -499,6 +543,7 @@ const translations = {
                 step1: "Получает данные токенов из API блокчейна Ergo",
                 step2: "Объединяет фрагменты, закодированные в base64",
                 step3: "Восстанавливает сжатый XZ-архив",
+                step4: "Доставляет исходный файл SCypherV2.sh.xz"
             },
             extraction: {
                 title: "Как извлечь SCypherV2.sh.xz",
@@ -544,7 +589,18 @@ const translations = {
             selectAmount: "Выберите сумму пожертвования (ERG):",
             address: "Адрес для пожертвований:",
             connectBtn: "Подключить кошелек Nautilus",
-            donateBtn: "Пожертвовать"
+            donateBtn: "Пожертвовать",
+            // НОВОЕ: Функциональность копирования и QR
+            copyBtn: "Копировать",
+            qrBtn: "QR",
+            copied: "Скопировано!",
+            copyFailed: "Ошибка",
+            qrModal: {
+                title: "QR-код для пожертвований",
+                instructions: "Отсканируйте этот QR-код вашим кошельком Ergo для пожертвования",
+                copyAddress: "Копировать адрес",
+                close: "Закрыть"
+            }
         },
         footer: {
             text: "Шифратор BIP39 с открытым кодом, хранящийся в блокчейне Ergo"
