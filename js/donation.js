@@ -642,3 +642,332 @@ function getTranslation(key) {
 
     return fallbacks[key] || key;
 }
+
+// ========================================
+// ENHANCED DONATION FUNCTIONALITY
+// Funcionalidad de copiar dirección y modal QR
+// ========================================
+
+// Initialize enhanced donation features on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initializeEnhancedDonation, 150);
+});
+
+function initializeEnhancedDonation() {
+    console.log('🎨 Initializing enhanced donation features...');
+
+    setupCopyAddressButton();
+    setupQRModal();
+
+    console.log('✅ Enhanced donation features initialized');
+}
+
+// ========================================
+// COPY ADDRESS FUNCTIONALITY
+// ========================================
+
+function setupCopyAddressButton() {
+    const copyBtn = document.getElementById('copyAddressBtn');
+    const donationAddress = document.getElementById('donationAddress');
+
+    if (!copyBtn || !donationAddress) {
+        console.warn('⚠️ Copy button or address element not found');
+        return;
+    }
+
+    copyBtn.addEventListener('click', async function() {
+        await copyAddressToClipboard();
+    });
+
+    console.log('📋 Copy address button setup complete');
+}
+
+async function copyAddressToClipboard() {
+    const copyBtn = document.getElementById('copyAddressBtn');
+    const donationAddress = document.getElementById('donationAddress');
+    const address = donationAddress.textContent.trim();
+
+    try {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(address);
+        } else {
+            // Fallback para navegadores más antiguos
+            fallbackCopyToClipboard(address);
+        }
+
+        // Visual feedback - cambiar a estado de éxito
+        showCopySuccess(copyBtn);
+
+        console.log('✅ Address copied to clipboard:', address.substring(0, 10) + '...');
+
+    } catch (error) {
+        console.error('❌ Failed to copy address:', error);
+        showCopyError(copyBtn);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    // Crear elemento temporal para la selección
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        throw new Error('Copy not supported');
+    } finally {
+        document.body.removeChild(textArea);
+    }
+}
+
+function showCopySuccess(button) {
+    // Guardar estado original
+    const originalIcon = button.querySelector('.btn-icon').textContent;
+    const originalText = button.querySelector('.btn-text').textContent;
+
+    // Obtener texto traducido
+    const copiedText = getTranslation('donate.copied') || 'Copied!';
+
+    // Cambiar a estado de éxito
+    button.classList.add('success');
+    button.querySelector('.btn-icon').textContent = '✅';
+    button.querySelector('.btn-text').textContent = copiedText;
+
+    // Disabled temporalmente para evitar spam
+    button.disabled = true;
+
+    // Restaurar después de 2 segundos
+    setTimeout(() => {
+        button.classList.remove('success');
+        button.querySelector('.btn-icon').textContent = originalIcon;
+        button.querySelector('.btn-text').textContent = originalText;
+        button.disabled = false;
+    }, 2000);
+}
+
+function showCopyError(button) {
+    // Guardar estado original
+    const originalIcon = button.querySelector('.btn-icon').textContent;
+    const originalText = button.querySelector('.btn-text').textContent;
+
+    // Obtener texto traducido
+    const failedText = getTranslation('donate.copyFailed') || 'Failed';
+
+    // Cambiar a estado de error
+    button.style.background = 'var(--error-color)';
+    button.style.borderColor = 'var(--error-color)';
+    button.style.color = 'white';
+    button.querySelector('.btn-icon').textContent = '❌';
+    button.querySelector('.btn-text').textContent = failedText;
+
+    // Restaurar después de 2 segundos
+    setTimeout(() => {
+        button.style.background = '';
+        button.style.borderColor = '';
+        button.style.color = '';
+        button.querySelector('.btn-icon').textContent = originalIcon;
+        button.querySelector('.btn-text').textContent = originalText;
+    }, 2000);
+}
+
+// ========================================
+// QR MODAL FUNCTIONALITY
+// ========================================
+
+function setupQRModal() {
+    const showQRBtn = document.getElementById('showQRBtn');
+    const qrModal = document.getElementById('qrModal');
+    const closeQRBtn = document.getElementById('closeQRModal');
+    const qrOverlay = document.getElementById('qrModalOverlay');
+    const copyFromQRBtn = document.getElementById('copyFromQRBtn');
+
+    if (!showQRBtn || !qrModal) {
+        console.warn('⚠️ QR modal elements not found');
+        return;
+    }
+
+    // Abrir modal
+    showQRBtn.addEventListener('click', function() {
+        openQRModal();
+    });
+
+    // Cerrar modal - botón X
+    if (closeQRBtn) {
+        closeQRBtn.addEventListener('click', function() {
+            closeQRModal();
+        });
+    }
+
+    // Cerrar modal - click en overlay
+    if (qrOverlay) {
+        qrOverlay.addEventListener('click', function() {
+            closeQRModal();
+        });
+    }
+
+    // Cerrar modal - tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && qrModal.classList.contains('show')) {
+            closeQRModal();
+        }
+    });
+
+    // Copiar desde modal QR
+    if (copyFromQRBtn) {
+        copyFromQRBtn.addEventListener('click', async function() {
+            await copyAddressFromQRModal();
+        });
+    }
+
+    console.log('📱 QR modal setup complete');
+}
+
+function openQRModal() {
+    const qrModal = document.getElementById('qrModal');
+
+    if (qrModal) {
+        qrModal.style.display = 'flex';
+
+        // Trigger animation después de display
+        setTimeout(() => {
+            qrModal.classList.add('show');
+        }, 10);
+
+        // Bloquear scroll del body
+        document.body.style.overflow = 'hidden';
+
+        // Focus en el botón de cerrar para accesibilidad
+        const closeBtn = document.getElementById('closeQRModal');
+        if (closeBtn) {
+            setTimeout(() => closeBtn.focus(), 100);
+        }
+
+        console.log('📱 QR modal opened');
+    }
+}
+
+function closeQRModal() {
+    const qrModal = document.getElementById('qrModal');
+
+    if (qrModal) {
+        qrModal.classList.remove('show');
+
+        // Esperar a que termine la animación antes de ocultar
+        setTimeout(() => {
+            qrModal.style.display = 'none';
+        }, 300);
+
+        // Restaurar scroll del body
+        document.body.style.overflow = '';
+
+        // Devolver focus al botón que abrió el modal
+        const showQRBtn = document.getElementById('showQRBtn');
+        if (showQRBtn) {
+            showQRBtn.focus();
+        }
+
+        console.log('📱 QR modal closed');
+    }
+}
+
+async function copyAddressFromQRModal() {
+    const copyBtn = document.getElementById('copyFromQRBtn');
+    const address = "9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY";
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(address);
+        } else {
+            fallbackCopyToClipboard(address);
+        }
+
+        // Visual feedback en el botón del modal
+        showQRCopySuccess(copyBtn);
+
+        console.log('✅ Address copied from QR modal');
+
+    } catch (error) {
+        console.error('❌ Failed to copy from QR modal:', error);
+        showQRCopyError(copyBtn);
+    }
+}
+
+function showQRCopySuccess(button) {
+    const originalIcon = button.querySelector('.btn-icon').textContent;
+    const originalText = button.textContent.replace(originalIcon, '').trim();
+
+    // Obtener texto traducido
+    const copiedText = getTranslation('donate.copied') || 'Copied!';
+
+    button.style.background = 'var(--success-color)';
+    button.style.borderColor = 'var(--success-color)';
+    button.style.color = 'white';
+    button.querySelector('.btn-icon').textContent = '✅';
+    button.innerHTML = button.innerHTML.replace(originalText, copiedText);
+
+    button.disabled = true;
+
+    setTimeout(() => {
+        button.style.background = '';
+        button.style.borderColor = '';
+        button.style.color = '';
+        button.querySelector('.btn-icon').textContent = originalIcon;
+        button.innerHTML = `<span class="btn-icon">${originalIcon}</span> ${originalText}`;
+        button.disabled = false;
+    }, 2000);
+}
+
+function showQRCopyError(button) {
+    const originalIcon = button.querySelector('.btn-icon').textContent;
+    const originalText = button.textContent.replace(originalIcon, '').trim();
+
+    // Obtener texto traducido
+    const failedText = getTranslation('donate.copyFailed') || 'Failed';
+
+    button.style.background = 'var(--error-color)';
+    button.style.borderColor = 'var(--error-color)';
+    button.style.color = 'white';
+    button.querySelector('.btn-icon').textContent = '❌';
+    button.innerHTML = button.innerHTML.replace(originalText, failedText);
+
+    setTimeout(() => {
+        button.style.background = '';
+        button.style.borderColor = '';
+        button.style.color = '';
+        button.querySelector('.btn-icon').textContent = originalIcon;
+        button.innerHTML = `<span class="btn-icon">${originalIcon}</span> ${originalText}`;
+    }, 2000);
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+// Función para verificar si el dispositivo soporta clipboard API
+function isClipboardSupported() {
+    return !!(navigator.clipboard || document.queryCommandSupported?.('copy'));
+}
+
+// Función para verificar si es un dispositivo móvil
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Export functions si es necesario para otros módulos
+if (typeof window !== 'undefined') {
+    window.donationEnhanced = {
+        copyAddressToClipboard,
+        openQRModal,
+        closeQRModal,
+        isClipboardSupported,
+        isMobileDevice
+    };
+}
