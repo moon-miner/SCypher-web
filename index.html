@@ -259,7 +259,7 @@
         </div>
     </section>
 
-    <!-- Donate Section -->
+    <!-- Donate Section - VERSIÓN MEJORADA con botones de copiar y QR -->
     <section id="donate" class="section">
         <div class="container">
             <h2 class="section-title" data-i18n="donate.title">Support Development</h2>
@@ -292,9 +292,22 @@
                         <input type="number" id="customAmount" class="custom-amount" placeholder="Custom amount" min="0.001" step="0.001">
                     </div>
 
-                    <div class="donation-address">
+                    <!-- NUEVA SECCIÓN DE DIRECCIÓN CON BOTONES -->
+                    <div class="donation-address-container">
                         <label data-i18n="donate.address">Donation Address:</label>
-                        <code>9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY</code>
+                        <div class="address-input-group">
+                            <code id="donationAddress" class="donation-address-code">9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY</code>
+                            <div class="address-buttons">
+                                <button id="copyAddressBtn" class="address-action-btn copy-btn" title="Copy address to clipboard">
+                                    <span class="btn-icon">📋</span>
+                                    <span class="btn-text" data-i18n="donate.copyBtn">Copy</span>
+                                </button>
+                                <button id="showQRBtn" class="address-action-btn qr-btn" title="Show QR code">
+                                    <span class="btn-icon">📱</span>
+                                    <span class="btn-text" data-i18n="donate.qrBtn">QR</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <button id="connectWalletBtn" class="btn btn-primary" disabled>
@@ -310,6 +323,32 @@
             </div>
         </div>
     </section>
+
+    <!-- MODAL DEL QR CODE -->
+    <div id="qrModal" class="qr-modal" style="display: none;">
+        <div class="qr-modal-overlay" id="qrModalOverlay"></div>
+        <div class="qr-modal-content">
+            <div class="qr-modal-header">
+                <h3 data-i18n="donate.qrModal.title">Donation QR Code</h3>
+                <button id="closeQRModal" class="qr-close-btn" data-i18n="donate.qrModal.close" title="Close QR modal">✕</button>
+            </div>
+            <div class="qr-modal-body">
+                <div class="qr-image-container">
+                    <img src="images/donation-qr.png" alt="Donation QR Code" class="qr-image" />
+                </div>
+                <p class="qr-instructions" data-i18n="donate.qrModal.instructions">Scan this QR code with your Ergo wallet to donate</p>
+                <div class="qr-address">
+                    <small>9f4WEgtBoWrtMa4HoUmxA3NSeWMU9PZRvArVGrSS3whSWfGDBoY</small>
+                </div>
+            </div>
+            <div class="qr-modal-footer">
+                <button id="copyFromQRBtn" class="btn btn-secondary copy-from-qr-btn">
+                    <span class="btn-icon">📋</span>
+                    <span data-i18n="donate.qrModal.copyAddress">Copy Address</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
