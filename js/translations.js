@@ -12,7 +12,7 @@ const translations = {
             feature3: "Open Source"
         },
         how: {
-            title: "How Scypher Works",
+            title: "How SCypher Works",
             subtitle: "A simple yet powerful encryption system that transforms your BIP39 seed phrase into another valid BIP39 phrase",
             process: {
                 title: "The Encryption Process",
@@ -47,7 +47,7 @@ const translations = {
             }
         },
         download: {
-            title: "Download Scypher",
+            title: "Download SCypher",
             subtitle: "Retrieve the cipher script directly from Ergo blockchain",
             blockchain: {
                 title: "Download from Blockchain",
@@ -91,13 +91,13 @@ const translations = {
                 fragmentFailed: "Fragment download failed"
             },
             github: {
-                scypher: "Scypher Repository",
+                SCypher: "SCypher Repository",
                 web: "Website Repository"
             }
         },
         donate: {
             title: "Support Development",
-            subtitle: "Help us maintain and improve Scypher with a secure donation",
+            subtitle: "Help us maintain and improve SCypher with a secure donation",
             tokenSafe: "Token-Safe Donations",
             info: "Our donation system automatically preserves all tokens in your UTXOs. Your NFTs and tokens are completely safe.",
             detecting: "Detecting Nautilus Wallet...",
@@ -133,7 +133,7 @@ const translations = {
             feature3: "Código Abierto"
         },
         how: {
-            title: "Cómo Funciona Scypher",
+            title: "Cómo Funciona SCypher",
             subtitle: "Un sistema de cifrado simple pero poderoso que transforma tu frase semilla BIP39 en otra frase BIP39 válida",
             process: {
                 title: "El Proceso de Cifrado",
@@ -168,7 +168,7 @@ const translations = {
             }
         },
         download: {
-            title: "Descargar Scypher",
+            title: "Descargar SCypher",
             subtitle: "Recupera el script cifrador directamente desde la blockchain de Ergo",
             blockchain: {
                 title: "Descargar desde Blockchain",
@@ -212,13 +212,13 @@ const translations = {
                 fragmentFailed: "Falló la descarga del fragmento"
             },
             github: {
-                scypher: "Repositorio Scypher",
+                SCypher: "Repositorio SCypher",
                 web: "Repositorio del Sitio Web"
             }
         },
         donate: {
             title: "Apoyar el Desarrollo",
-            subtitle: "Ayúdanos a mantener y mejorar Scypher con una donación segura",
+            subtitle: "Ayúdanos a mantener y mejorar SCypher con una donación segura",
             tokenSafe: "Donaciones Seguras para Tokens",
             info: "Nuestro sistema de donaciones preserva automáticamente todos los tokens en tus UTXOs. Tus NFTs y tokens están completamente seguros.",
             detecting: "Detectando Nautilus Wallet...",
@@ -254,7 +254,7 @@ const translations = {
             feature3: "开源"
         },
         how: {
-            title: "Scypher 如何工作",
+            title: "SCypher 如何工作",
             subtitle: "一个简单而强大的加密系统，将您的 BIP39 种子短语转换为另一个有效的 BIP39 短语",
             process: {
                 title: "加密过程",
@@ -289,7 +289,7 @@ const translations = {
             }
         },
         download: {
-            title: "下载 Scypher",
+            title: "下载 SCypher",
             subtitle: "直接从 Ergo 区块链检索密码脚本",
             blockchain: {
                 title: "从区块链下载",
@@ -333,13 +333,13 @@ const translations = {
                 fragmentFailed: "片段下载失败"
             },
             github: {
-                scypher: "Scypher 仓库",
+                SCypher: "SCypher 仓库",
                 web: "网站仓库"
             }
         },
         donate: {
             title: "支持开发",
-            subtitle: "通过安全捐赠帮助我们维护和改进 Scypher",
+            subtitle: "通过安全捐赠帮助我们维护和改进 SCypher",
             tokenSafe: "代币安全捐赠",
             info: "我们的捐赠系统会自动保留您 UTXO 中的所有代币。您的 NFT 和代币完全安全。",
             detecting: "正在检测 Nautilus 钱包...",
@@ -375,7 +375,7 @@ const translations = {
             feature3: "Open Source"
         },
         how: {
-            title: "Wie Scypher funktioniert",
+            title: "Wie SCypher funktioniert",
             subtitle: "Ein einfaches aber mächtiges Verschlüsselungssystem, das Ihre BIP39-Seed-Phrase in eine andere gültige BIP39-Phrase umwandelt",
             process: {
                 title: "Der Verschlüsselungsprozess",
@@ -410,7 +410,7 @@ const translations = {
             }
         },
         download: {
-            title: "Scypher herunterladen",
+            title: "SCypher herunterladen",
             subtitle: "Rufen Sie das Verschlüsselungsskript direkt von der Ergo-Blockchain ab",
             blockchain: {
                 title: "Von Blockchain herunterladen",
@@ -454,13 +454,13 @@ const translations = {
                 fragmentFailed: "Fragment-Download fehlgeschlagen"
             },
             github: {
-                scypher: "Scypher-Repository",
+                SCypher: "SCypher-Repository",
                 web: "Website-Repository"
             }
         },
         donate: {
             title: "Entwicklung unterstützen",
-            subtitle: "Helfen Sie uns, Scypher mit einer sicheren Spende zu pflegen und zu verbessern",
+            subtitle: "Helfen Sie uns, SCypher mit einer sicheren Spende zu pflegen und zu verbessern",
             tokenSafe: "Token-sichere Spenden",
             info: "Unser Spendensystem bewahrt automatisch alle Token in Ihren UTXOs auf. Ihre NFTs und Token sind vollkommen sicher.",
             detecting: "Erkenne Nautilus Wallet...",
@@ -496,7 +496,7 @@ const translations = {
             feature3: "Открытый код"
         },
         how: {
-            title: "Как работает Scypher",
+            title: "Как работает SCypher",
             subtitle: "Простая, но мощная система шифрования, которая преобразует вашу BIP39 seed-фразу в другую действительную BIP39 фразу",
             process: {
                 title: "Процесс шифрования",
@@ -531,7 +531,7 @@ const translations = {
             }
         },
         download: {
-            title: "Скачать Scypher",
+            title: "Скачать SCypher",
             subtitle: "Получите скрипт шифратора напрямую из блокчейна Ergo",
             blockchain: {
                 title: "Скачать из блокчейна",
@@ -575,13 +575,13 @@ const translations = {
                 fragmentFailed: "Загрузка фрагмента не удалась"
             },
             github: {
-                scypher: "Репозиторий Scypher",
+                SCypher: "Репозиторий SCypher",
                 web: "Репозиторий веб-сайта"
             }
         },
         donate: {
             title: "Поддержать разработку",
-            subtitle: "Помогите нам поддерживать и улучшать Scypher безопасным пожертвованием",
+            subtitle: "Помогите нам поддерживать и улучшать SCypher безопасным пожертвованием",
             tokenSafe: "Безопасные для токенов пожертвования",
             info: "Наша система пожертвований автоматически сохраняет все токены в ваших UTXO. Ваши NFT и токены полностью безопасны.",
             detecting: "Обнаружение кошелька Nautilus...",
@@ -614,7 +614,7 @@ if (typeof window !== 'undefined') {
 
     // Global function to get translations
     window.getTranslation = function(keyPath) {
-        const currentLang = localStorage.getItem('scypher-lang') || 'en';
+        const currentLang = localStorage.getItem('SCypher-lang') || 'en';
         const keys = keyPath.split('.');
         let value = translations[currentLang];
 
